@@ -1,21 +1,30 @@
 ---
-name: skillframe-commit
-description: skillframe 컨텍스트에서 사용자가 명시적으로 "/commit", "skillframe:commit", 또는 "/skillframe:commit"이라고 요청했을 때 사용하는 개인용 한국어 커밋 워크플로우. 현재 git 변경사항을 리뷰어가 이해하기 쉬운 커밋 단위로 나누고, 브랜치에서 JIRA 티켓을 추론해 한국어 Conventional Commit 메시지로 실제 커밋한다. 일반적인 "커밋해줘", "커밋 메시지 작성해줘" 요청에는 다른 커밋 스킬과 충돌하지 않도록 이 스킬을 자동 사용하지 않는다.
+name: skillframe:commit
+description: skillframe 저장소의 `skills/commit` 경로에 있는 개인용 한국어 커밋 워크플로우. 사용자가 명시적으로 "$skillframe:commit", "/commit", "$commit", "skillframe:commit", 또는 "/skillframe:commit"이라고 요청했을 때 이 스킬을 skillframe의 commit 스킬로 인지하고 사용한다. 현재 git 변경사항을 리뷰어가 이해하기 쉬운 커밋 단위로 나누고, 브랜치에서 JIRA 티켓을 추론해 한국어 Conventional Commit 메시지로 실제 커밋한다. 일반적인 "커밋해줘", "커밋 메시지 작성해줘" 요청에는 다른 커밋 스킬과 충돌하지 않도록 이 스킬을 자동 사용하지 않는다.
 ---
 
-# Skillframe Commit
+# Skillframe: Commit
 
 리뷰어가 쉽게 이해할 수 있도록 변경사항을 원자적인 커밋 단위로 나누고,
 간결한 한국어 Conventional Commit 메시지로 커밋한다.
 
-이 스킬은 skillframe 컨텍스트에서 사용자가 `/commit`, `skillframe:commit`,
-또는 `/skillframe:commit`을 명시했을 때 사용한다. `/commit`은
+이 스킬은 사용자가 `$skillframe:commit`, `/commit`, `skillframe:commit`,
+`/skillframe:commit`, 또는 `$commit`을 명시했을 때 사용한다. `/commit`과
+`$commit`은
 "skillframe의 commit 스킬"을 뜻하는 개인 호출 문구로 해석한다.
 일반적인 자연어 커밋 요청에는 자동으로 끼어들지 않는다.
 
 사용자가 커밋을 요청한 경우 이 스킬은 변경사항을 stage하고 `git commit`을
 실행할 수 있다. 단, 사용자가 명시적으로 요청하지 않는 한 히스토리를
 재작성하지 않고, 관련 없는 사용자 변경사항은 보존한다.
+
+## 스킬 식별
+
+- 설치 경로: `skills/commit/`
+- 스킬 이름: `skillframe:commit`
+- 컨텍스트: `skillframe`
+- 호출 해석: `$skillframe:commit`을 기본 호출명으로 사용한다. `/commit` 또는
+  `$commit`으로 호출된 경우에도 이 스킬을 "skillframe commit"으로 식별한다.
 
 ## 기본 동작
 
