@@ -1,4 +1,4 @@
 interface:
-  display_name: "Skillframe: Pull Request"
-  short_description: "Korean pull request workflow"
-  default_prompt: "Use $skillframe:pull-request for the skillframe Korean pull request workflow."
+  display_name: "Skillframe: Create Pull Request"
+  short_description: "Korean pull request creation workflow"
+  default_prompt: "Use $skillframe:create-pull-request for the skillframe Korean pull request creation workflow."
