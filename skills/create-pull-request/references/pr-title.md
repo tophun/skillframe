@@ -48,5 +48,5 @@ type은 PR 전체 diff의 주된 성격을 기준으로 정한다. 여러 커밋
 feat(visit-log): PE-107, 상담록 도메인 분류와 방문예정 UI 정비
 feat: PE-108, 방문 로그 템플릿 관리 기능 추가
 fix(contact): 중복 연락처 생성 방지
-docs(skillframe): commit/pull-request 스킬 호출명 문서화
+docs(skillframe): commit/create-pull-request 스킬 호출명 문서화
 ```

@@ -1,6 +1,6 @@
 ---
 name: skillframe:create-pull-request
-description: skillframe 저장소의 `skills/pull-request` 경로에 있는 개인용 한국어 GitHub PR 생성 워크플로우. 사용자가 "$skillframe:create-pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "/pr", "/pull-request", "$pull-request", "skillframe:pr", "skillframe:pull-request", 또는 "skillframe:create-pull-request"처럼 새 GitHub PR 생성을 요청하면 사용한다. 기존 PR 변경과 리뷰 작업은 이 스킬의 범위가 아니다. gh CLI와 git 상태를 점검하고, references의 title/body 규칙에 따라 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받는다.
+description: skillframe 저장소의 `skills/create-pull-request` 경로에 있는 개인용 한국어 GitHub PR 생성 워크플로우. 사용자가 "$skillframe:create-pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "/pr", "/create-pull-request", "$create-pull-request", 또는 "skillframe:create-pull-request"처럼 새 GitHub PR 생성을 요청하면 사용한다. 기존 PR 변경과 리뷰 작업은 이 스킬의 범위가 아니다. gh CLI와 git 상태를 점검하고, references의 title/body 규칙에 따라 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받는다.
 ---
 
 # Skillframe: Create Pull Request
@@ -12,11 +12,11 @@ description: skillframe 저장소의 `skills/pull-request` 경로에 있는 개�
 
 ## 스킬 식별
 
-- 설치 경로: `skills/pull-request/`
+- 설치 경로: `skills/create-pull-request/`
 - 스킬 이름: `skillframe:create-pull-request`
 - 컨텍스트: `skillframe`
 - 호출 해석: `$skillframe:create-pull-request`를 기본 호출명으로 사용한다. `/pr`,
-  `/pull-request`, `$pull-request`, `skillframe:pr`, `skillframe:pull-request`로
+  `/create-pull-request`, `$create-pull-request`, `skillframe:create-pull-request`로
   호출된 경우에도 이 스킬을 "skillframe create-pull-request"로 식별한다.
 
 ## 절대 규칙
