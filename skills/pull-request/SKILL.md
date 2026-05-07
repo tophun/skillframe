@@ -32,65 +32,25 @@ GitHub PR을 리뷰어가 이해하기 쉬운 형태로 생성하거나 업데�
 
 ## 기본 점검
 
-1. 저장소와 도구 상태를 확인한다.
-
-```bash
-git rev-parse --show-toplevel
-git status --short
-git branch --show-current
-gh --version
-gh auth status
-```
-
-2. `gh`가 없으면 설치를 안내한다.
-
-```bash
-brew install gh
-```
-
-macOS가 아니면 `https://cli.github.com/` 설치 안내를 제공한다.
-
-3. 로그인되어 있지 않으면 다음을 안내한다.
-
-```bash
-gh auth login
-```
-
-4. 현재 브랜치가 `main` 또는 `master`이면 기능 브랜치를 만들거나 전환하도록 안내한다.
-사용자가 원하면 `codex/` prefix를 기본으로 브랜치를 만든다.
+- 저장소와 도구 상태를 `git rev-parse --show-toplevel`, `git status --short`,
+  `git branch --show-current`, `gh --version`, `gh auth status`로 확인한다.
+- `gh`가 없으면 macOS는 `brew install gh`, 그 외 환경은 `https://cli.github.com/`
+  설치 안내를 제공한다.
+- 로그인되어 있지 않으면 `gh auth login`을 안내한다.
+- 현재 브랜치가 `main` 또는 `master`이면 기능 브랜치를 만들거나 전환하도록 안내한다.
+  사용자가 원하면 `codex/` prefix를 기본으로 브랜치를 만든다.
 
 ## 컨텍스트 수집
 
-1. base branch를 찾는다.
-
-```bash
-git remote show origin
-git symbolic-ref refs/remotes/origin/HEAD --short
-```
-
-원격 HEAD를 찾지 못하면 `main`, `master`, `develop` 순서로 존재 여부를 확인한다.
-
-2. 원격 상태를 갱신한다.
-
-```bash
-git fetch origin
-```
-
-3. 기존 PR을 확인한다.
-
-```bash
-gh pr view --json number,url,title,body,baseRefName,headRefName,state,isDraft
-```
-
-기존 PR이 있으면 생성하지 않고 업데이트 계획을 세운다.
-
-4. 변경 범위와 의도를 분석한다.
-
-```bash
-git log origin/<base>..HEAD --oneline --no-decorate
-git diff origin/<base>..HEAD --stat
-git diff origin/<base>..HEAD
-```
+- base branch를 `git remote show origin` 또는
+  `git symbolic-ref refs/remotes/origin/HEAD --short`로 찾는다. 실패하면
+  `main`, `master`, `develop` 순서로 확인한다.
+- `git fetch origin`으로 원격 상태를 갱신한다.
+- `gh pr view --json number,url,title,body,baseRefName,headRefName,state,isDraft`로
+  기존 PR을 확인하고, 있으면 업데이트 흐름으로 전환한다.
+- `git log origin/<base>..HEAD --oneline --no-decorate`,
+  `git diff origin/<base>..HEAD --stat`, `git diff origin/<base>..HEAD`로
+  변경 범위와 의도를 분석한다.
 
 작업 트리에 커밋되지 않은 변경이 있으면 diff를 읽고 PR에 포함할지 판단한다. 포함해야
 하면 리뷰어 친화적인 커밋 단위로 stage/commit한다. 커밋 단위가 애매하거나 unrelated
@@ -101,12 +61,7 @@ git diff origin/<base>..HEAD
 - PR에 필요한 변경이 아직 커밋되지 않았으면 이 스킬 안에서 커밋할 수 있다.
 - 커밋 메시지는 가능하면 Conventional Commit을 사용하고 한국어 요약을 쓴다.
 - 더 정교한 커밋 분리가 필요하면 skillframe의 `commit` 흐름을 따른다.
-- branch가 원격에 없으면 PR 생성 전에 push한다.
-
-```bash
-git push -u origin HEAD
-```
-
+- branch가 원격에 없으면 PR 생성 전에 `git push -u origin HEAD`로 push한다.
 - rebase 또는 squash가 필요해 보이면 이유와 위험을 설명하고 사용자 승인을 받은 뒤 실행한다.
 - rebase 이후 push가 필요하면 `--force-with-lease`만 사용한다.
 
@@ -160,100 +115,36 @@ git push -u origin HEAD
    - PR body 전체
    - push 여부와 현재 원격 branch 상태
 
-4. 사용자가 승인한 뒤 임시 파일로 body를 저장하고 생성한다.
-
-```bash
-gh pr create --title "<title>" --body-file /tmp/skillframe-pull-request-body.md --base <base>
-```
-
-draft PR이면 다음을 사용한다.
-
-```bash
-gh pr create --title "<title>" --body-file /tmp/skillframe-pull-request-body.md --base <base> --draft
-```
+4. 사용자가 승인한 뒤 임시 파일로 body를 저장하고 `gh pr create --title "<title>" --body-file /tmp/skillframe-pull-request-body.md --base <base>`로 생성한다. draft PR이면 `--draft`를 추가한다.
 
 5. 생성 후 PR number 또는 URL만 핵심 결과로 보고한다. 필요한 경우 실행한 검증 명령을
 짧게 덧붙인다.
 
 ## PR Title 규칙
 
-PR title은 커밋 메시지와 비슷한 Conventional Commit 형태를 기본으로 쓴다.
+PR title은 커밋 메시지와 같은 Conventional Commit 형태를 기본으로 쓴다.
 
-JIRA 티켓이 있는 경우:
-
-```text
-<type>(<scope>): <TICKET>, <한국어 요약>
-```
-
-JIRA 티켓이 없는 경우:
-
-```text
-<type>(<scope>): <한국어 요약>
-```
-
-scope는 선택 사항이다. 변경 범위가 하나의 도메인, 화면, 기능, 패키지, 스킬로
-분명할 때만 사용한다. 유용한 scope가 없으면 생략한다.
-
-type은 PR 전체 diff의 주된 성격을 기준으로 정한다. 여러 커밋이 섞여 있으면
-리뷰어가 이 PR을 어떤 변경으로 봐야 하는지를 우선한다.
-
-허용되는 type:
-
-- `feat`: 새 기능, 새 사용자 흐름, 새 스킬/도구 동작
-- `fix`: 버그 수정, 잘못된 동작 보정
-- `refactor`: 의도한 동작 변화 없는 구조 개선
-- `docs`: 문서만 변경
-- `test`: 테스트만 변경
-- `chore`: 제품 동작과 무관한 유지보수
-- `build`: 빌드, 패키지, 의존성 변경
-- `ci`: CI, 배포 자동화 변경
-- `style`: 포맷팅만 변경
-- `revert`: 이전 변경 되돌림
-
-요약은 한국어로 작성하고, 커밋 메시지처럼 리뷰어가 제목만 보고 diff 방향을 예측할
-수 있게 쓴다. `작업`, `수정`, `정리`, `기능 개선`처럼 범위가 흐린 단어만으로
-끝내지 않는다.
-
-좋은 예시:
-
-```text
-feat(visit-log): PE-107, 상담록 도메인 분류와 방문예정 UI 정비
-feat: PE-108, 방문 로그 템플릿 관리 기능 추가
-fix(contact): 중복 연락처 생성 방지
-docs(skillframe): commit/pull-request 스킬 호출명 문서화
-```
+- JIRA 티켓 있음: `<type>(<scope>): <TICKET>, <한국어 요약>`
+- JIRA 티켓 없음: `<type>(<scope>): <한국어 요약>`
+- type/scope/요약 규칙은 `references/pr-title.md`를 따른다.
+- PR 전체 diff의 주된 성격을 기준으로 type을 정한다.
+- 모호한 "수정", "작업", "정리"만으로 끝내지 않는다.
 
 ## 기존 PR 업데이트 흐름
 
 기존 PR이 있거나 사용자가 기존 PR 정리를 요청하면 다음을 따른다.
 
-1. 현재 PR 정보를 확인한다.
-
-```bash
-gh pr view --json number,url,title,body,baseRefName,headRefName,state,isDraft
-```
-
+1. `gh pr view --json number,url,title,body,baseRefName,headRefName,state,isDraft`로 현재 PR 정보를 확인한다.
 2. 새 커밋, diff, 템플릿 변경 여부를 분석한다.
 3. title/body를 갱신해야 하면 변경안을 먼저 보여준다.
-4. 사용자가 승인하면 `gh pr edit`으로 반영한다.
-
-```bash
-gh pr edit --title "<title>" --body-file /tmp/skillframe-pull-request-body.md
-```
-
+4. 사용자가 승인하면 `gh pr edit --title "<title>" --body-file /tmp/skillframe-pull-request-body.md`로 반영한다.
 5. 완료 후 PR number 또는 URL을 보고한다.
 
 ## PR 리뷰 코멘트 흐름
 
 사용자가 PR 리뷰, inline comment, review summary 작성을 요청하면 다음을 따른다.
 
-1. 대상 PR을 확인한다.
-
-```bash
-gh pr view <number-or-url> --json number,url,title,files,headRefOid
-gh pr diff <number-or-url>
-```
-
+1. `gh pr view <number-or-url> --json number,url,title,files,headRefOid`와 `gh pr diff <number-or-url>`로 대상 PR을 확인한다.
 2. findings는 버그, 회귀 위험, 테스트 누락, 보안/성능 위험 중심으로 작성한다.
 3. inline comment는 즉시 submit하지 말고 pending review로 작성한다.
 4. 모든 inline comment를 먼저 작성한 뒤 summary comment를 같은 pending review에 추가한다.
