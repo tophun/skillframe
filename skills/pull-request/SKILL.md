@@ -1,15 +1,24 @@
 ---
-name: skillframe-pr
-description: GitHub Pull Request 생성, 기존 PR 업데이트, PR 본문 작성, PR 리뷰 코멘트 작성을 수행하는 skillframe 개인용 한국어 PR 워크플로우. 사용자가 "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "PR 업데이트해줘", "기존 PR 정리해줘", "PR 리뷰 남겨줘", "/pr", "skillframe:pr", "/skillframe:pr"처럼 GitHub PR 생성/수정/리뷰를 요청하면 사용한다. gh CLI와 git 상태를 점검하고, .github PR 템플릿이 있으면 그 구조를 따르며, 없으면 스킬 기본 템플릿으로 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받으며, GitHub 리뷰 제출은 항상 pending review로 작성한 뒤 사용자에게 제출 여부를 물어본다.
+name: skillframe:pull-request
+description: skillframe 저장소의 `skills/pull-request` 경로에 있는 개인용 한국어 GitHub Pull Request 워크플로우. 사용자가 "$skillframe:pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "PR 업데이트해줘", "기존 PR 정리해줘", "PR 리뷰 남겨줘", "/pr", "$pull-request", "skillframe:pr", "skillframe:pull-request", "/skillframe:pr", 또는 "/skillframe:pull-request"처럼 GitHub PR 생성/수정/리뷰를 요청하면 이 스킬을 skillframe의 pull-request 스킬로 인지하고 사용한다. gh CLI와 git 상태를 점검하고, .github PR 템플릿이 있으면 그 구조를 따르며, 없으면 스킬 기본 템플릿으로 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받으며, GitHub 리뷰 제출은 항상 pending review로 작성한 뒤 사용자에게 제출 여부를 물어본다.
 ---
 
-# Skillframe PR
+# Skillframe: Pull Request
 
 GitHub PR을 리뷰어가 이해하기 쉬운 형태로 생성하거나 업데이트한다. PR title과 body는
 기본적으로 한국어로 작성하고, 저장소의 PR 템플릿이 있으면 그 구조를 우선한다.
 
 이 스킬은 사용자가 PR 생성, 기존 PR 업데이트, PR 리뷰 코멘트 작성을 요청했을 때
 자동으로 사용한다.
+
+## 스킬 식별
+
+- 설치 경로: `skills/pull-request/`
+- 스킬 이름: `skillframe:pull-request`
+- 컨텍스트: `skillframe`
+- 호출 해석: `$skillframe:pull-request`를 기본 호출명으로 사용한다. `/pr`,
+  `/pull-request`, 또는 `$pull-request`로 호출된 경우에도 이 스킬을
+  "skillframe pull-request"로 식별한다.
 
 ## 절대 규칙
 
@@ -91,7 +100,7 @@ git diff origin/<base>..HEAD
 
 - PR에 필요한 변경이 아직 커밋되지 않았으면 이 스킬 안에서 커밋할 수 있다.
 - 커밋 메시지는 가능하면 Conventional Commit을 사용하고 한국어 요약을 쓴다.
-- 더 정교한 커밋 분리가 필요하면 `skillframe-commit` 흐름을 따른다.
+- 더 정교한 커밋 분리가 필요하면 skillframe의 `commit` 흐름을 따른다.
 - branch가 원격에 없으면 PR 생성 전에 push한다.
 
 ```bash
@@ -153,13 +162,13 @@ git push -u origin HEAD
 4. 사용자가 승인한 뒤 임시 파일로 body를 저장하고 생성한다.
 
 ```bash
-gh pr create --title "<title>" --body-file /tmp/skillframe-pr-body.md --base <base>
+gh pr create --title "<title>" --body-file /tmp/skillframe-pull-request-body.md --base <base>
 ```
 
 draft PR이면 다음을 사용한다.
 
 ```bash
-gh pr create --title "<title>" --body-file /tmp/skillframe-pr-body.md --base <base> --draft
+gh pr create --title "<title>" --body-file /tmp/skillframe-pull-request-body.md --base <base> --draft
 ```
 
 5. 생성 후 PR number 또는 URL만 핵심 결과로 보고한다. 필요한 경우 실행한 검증 명령을
@@ -180,7 +189,7 @@ gh pr view --json number,url,title,body,baseRefName,headRefName,state,isDraft
 4. 사용자가 승인하면 `gh pr edit`으로 반영한다.
 
 ```bash
-gh pr edit --title "<title>" --body-file /tmp/skillframe-pr-body.md
+gh pr edit --title "<title>" --body-file /tmp/skillframe-pull-request-body.md
 ```
 
 5. 완료 후 PR number 또는 URL을 보고한다.
