@@ -1,12 +1,12 @@
 ---
 name: skillframe:pull-request
-description: skillframe 저장소의 `skills/pull-request` 경로에 있는 개인용 한국어 GitHub Pull Request 워크플로우. 사용자가 "$skillframe:pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "PR 업데이트해줘", "기존 PR 정리해줘", "PR 리뷰 남겨줘", "/pr", "$pull-request", "skillframe:pr", "skillframe:pull-request", "/skillframe:pr", 또는 "/skillframe:pull-request"처럼 GitHub PR 생성/수정/리뷰를 요청하면 이 스킬을 skillframe의 pull-request 스킬로 인지하고 사용한다. gh CLI와 git 상태를 점검하고, .github PR 템플릿이 있으면 그 구조를 따르며, 없으면 스킬 기본 템플릿으로 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받으며, GitHub 리뷰 제출은 항상 pending review로 작성한 뒤 사용자에게 제출 여부를 물어본다.
+description: skillframe 저장소의 `skills/pull-request` 경로에 있는 개인용 한국어 GitHub Pull Request 워크플로우. 사용자가 "$skillframe:pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "PR 업데이트해줘", "기존 PR 정리해줘", "PR 리뷰 남겨줘", "/pr", "$pull-request", "skillframe:pr", "skillframe:pull-request", "/skillframe:pr", 또는 "/skillframe:pull-request"처럼 GitHub PR 생성/수정/리뷰를 요청하면 이 스킬을 skillframe의 pull-request 스킬로 인지하고 사용한다. gh CLI와 git 상태를 점검하고, references의 title/body 규칙에 따라 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받으며, GitHub 리뷰 제출은 항상 pending review로 작성한 뒤 사용자에게 제출 여부를 물어본다.
 ---
 
 # Skillframe: Pull Request
 
 GitHub PR을 리뷰어가 이해하기 쉬운 형태로 생성하거나 업데이트한다. PR title과 body는
-기본적으로 한국어로 작성하고, 저장소의 PR 템플릿이 있으면 그 구조를 우선한다.
+기본적으로 한국어로 작성하고, 세부 작성 규칙은 `references/`를 따른다.
 
 이 스킬은 사용자가 PR 생성, 기존 PR 업데이트, PR 리뷰 코멘트 작성을 요청했을 때
 자동으로 사용한다.
@@ -65,46 +65,14 @@ GitHub PR을 리뷰어가 이해하기 쉬운 형태로 생성하거나 업데�
 - rebase 또는 squash가 필요해 보이면 이유와 위험을 설명하고 사용자 승인을 받은 뒤 실행한다.
 - rebase 이후 push가 필요하면 `--force-with-lease`만 사용한다.
 
-## PR 템플릿
-
-다음 순서로 템플릿을 찾는다.
-
-1. `.github/pull_request_template.md`
-2. `.github/PULL_REQUEST_TEMPLATE.md`
-3. `.github/pull_request_template/*.md`
-4. `.github/PULL_REQUEST_TEMPLATE/*.md`
-
-템플릿이 있으면 섹션 구조, 체크박스, 안내 문구를 유지하고 내용을 채운다. 불필요한
-섹션을 임의로 삭제하지 않는다. 해당 없음은 `N/A`로 명시한다.
-
-템플릿이 없으면 다음 기본 템플릿을 사용한다.
-
-```markdown
-## 요약
-
-- 
-
-## 변경사항
-
-- 
-
-## 관련 이슈
-
-- 
-```
-
-관련 이슈는 브랜치명, 커밋 메시지, diff에서 `#123`, `fixes #123`, `closes #123`,
-`[A-Z][A-Z0-9]+-[0-9]+` 패턴을 추론한다. 찾을 수 없으면 `N/A`를 사용한다.
-
 ## PR 생성 흐름
 
 1. title 후보를 만든다.
-   - 아래 "PR Title 규칙"을 따른다.
+   - `references/pr-title.md`의 규칙을 따른다.
    - 리뷰어가 diff 방향을 예측할 수 있게 구체적으로 쓴다.
-   - 모호한 "수정", "작업", "정리"만으로 끝내지 않는다.
 
 2. body를 만든다.
-   - 저장소 템플릿 또는 기본 템플릿을 따른다.
+   - `references/pr-body.md`의 템플릿 탐색과 작성 규칙을 따른다.
    - 검증 섹션에는 실제 실행한 명령과 결과를 쓴다.
    - 검증하지 못한 항목은 "미실행"으로 명시하고 이유를 적는다.
 
@@ -119,16 +87,6 @@ GitHub PR을 리뷰어가 이해하기 쉬운 형태로 생성하거나 업데�
 
 5. 생성 후 PR number 또는 URL만 핵심 결과로 보고한다. 필요한 경우 실행한 검증 명령을
 짧게 덧붙인다.
-
-## PR Title 규칙
-
-PR title은 커밋 메시지와 같은 Conventional Commit 형태를 기본으로 쓴다.
-
-- JIRA 티켓 있음: `<type>(<scope>): <TICKET>, <한국어 요약>`
-- JIRA 티켓 없음: `<type>(<scope>): <한국어 요약>`
-- type/scope/요약 규칙은 `references/pr-title.md`를 따른다.
-- PR 전체 diff의 주된 성격을 기준으로 type을 정한다.
-- 모호한 "수정", "작업", "정리"만으로 끝내지 않는다.
 
 ## 기존 PR 업데이트 흐름
 
@@ -160,7 +118,7 @@ PR title은 커밋 메시지와 같은 Conventional Commit 형태를 기본으�
 - branch가 push되지 않았으면 `git push -u origin HEAD`를 실행하거나 안내한다.
 - PR이 이미 있으면 기존 PR URL을 보여주고 업데이트 흐름으로 전환한다.
 - merge conflict가 있으면 충돌 파일을 보여주고 rebase 또는 merge 전략을 제안한다.
-- PR 템플릿을 찾지 못해도 중단하지 않고 기본 템플릿을 사용한다.
+- PR body 템플릿을 찾지 못해도 중단하지 않고 `references/pr-body.md`를 따른다.
 
 ## 최종 보고
 
