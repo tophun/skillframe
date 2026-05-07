@@ -1,0 +1,4 @@
+interface:
+  display_name: "Skillframe PR"
+  short_description: "Guided Korean PR workflow"
+  default_prompt: "PR 만들어줘"
