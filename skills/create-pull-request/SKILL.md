@@ -1,103 +1,159 @@
 ---
-name: skillframe:create-pull-request
-description: skillframe 저장소의 `skills/create-pull-request` 경로에 있는 개인용 한국어 GitHub PR 생성 워크플로우. 사용자가 "$skillframe:create-pull-request", "PR 만들어줘", "pull request 만들어줘", "PR 올려줘", "/pr", "/create-pull-request", "$create-pull-request", 또는 "skillframe:create-pull-request"처럼 새 GitHub PR 생성을 요청하면 사용한다. 기존 PR 변경과 리뷰 작업은 이 스킬의 범위가 아니다. gh CLI와 git 상태를 점검하고, references의 title/body 규칙에 따라 한국어 PR을 작성한다. 실제 gh pr create 실행 전에는 반드시 사용자 승인을 받는다.
+name: skillframe-create-pull-request
+description: 사용자가 새 GitHub PR, pull request, 풀리퀘 생성을 요청하거나 기존 PR의 설명/draft 상태 보정을 요청할 때 사용한다. "/pr", "PR 만들어줘", "PR 올려줘", "PR 본문 고쳐줘", "커밋하고 PR"을 포함하며 PR 코드리뷰/댓글/merge/label/reviewer 변경에는 사용하지 않는다
 ---
 
 # Skillframe: Create Pull Request
 
-새 GitHub PR을 리뷰어가 이해하기 쉬운 형태로 만든다. PR title과 body는 기본적으로
-한국어로 작성하고, 세부 작성 규칙은 `references/`를 따른다.
+GitHub PR을 생성하거나, 이미 만들어진 PR의 설명과 상태를 리뷰어가 이해하기 쉬운
+형태로 보정한다.
 
-이 스킬은 새 PR 생성에만 사용한다. 기존 PR 변경과 리뷰 작업은 다루지 않는다.
+**핵심 원칙:** `gh pr create`, `gh pr edit`, `gh pr ready`는 template/reference,
+diff, 기존 PR 상태를 확인하고 사용자 승인을 받은 뒤에만 실행한다.
 
-## 스킬 식별
+## 적용 범위
 
-- 설치 경로: `skills/create-pull-request/`
-- 스킬 이름: `skillframe:create-pull-request`
-- 컨텍스트: `skillframe`
-- 호출 해석: `$skillframe:create-pull-request`를 기본 호출명으로 사용한다. `/pr`,
-  `/create-pull-request`, `$create-pull-request`, `skillframe:create-pull-request`로
-  호출된 경우에도 이 스킬을 "skillframe create-pull-request"로 식별한다.
+이 스킬은 두 가지 작업만 처리한다.
 
-## 절대 규칙
+1. 새 PR 생성
+   - local branch의 diff를 읽어 PR 제목과 본문을 작성한다.
+   - 필요하면 branch를 push한다.
+   - 생성 전 사용자 승인을 받는다.
 
-- 실제 `gh pr create` 실행 직전에는 반드시 사용자에게 title, base/head, body, draft 여부를 보여주고 승인받는다.
-- 기존 PR이 있으면 업데이트하지 말고 기존 PR URL을 보고한 뒤 중단한다.
-- `gh` 미설치, GitHub 미로그인, branch 미push 같은 문제는 즉시 중단 보고로 끝내지 말고 성공 가능한 다음 명령을 안내한다.
-- 히스토리 재작성(`rebase`, `commit --amend`, squash, `push --force-with-lease`)은 명시 승인 없이 실행하지 않는다.
-- 관련 없는 사용자 변경사항은 stage, commit, stash, discard, revert하지 않는다.
-- 기본 생성 형태는 draft PR이다. 사용자가 ready PR을 명시하면 draft를 끈다.
+2. 기존 PR 설명 보정
+   - 기존 PR의 설명과 draft 상태만 보정한다.
+   - 수정 전 사용자 승인을 받는다.
 
-## 기본 점검
+다음 작업은 이 스킬 범위가 아니다.
 
-- 저장소와 도구 상태를 `git rev-parse --show-toplevel`, `git status --short`,
-  `git branch --show-current`, `gh --version`, `gh auth status`로 확인한다.
-- `gh`가 없으면 macOS는 `brew install gh`, 그 외 환경은 `https://cli.github.com/`
-  설치 안내를 제공한다.
-- 로그인되어 있지 않으면 `gh auth login`을 안내한다.
-- 현재 브랜치가 `main` 또는 `master`이면 기능 브랜치를 만들거나 전환하도록 안내한다.
-  사용자가 원하면 `codex/` prefix를 기본으로 브랜치를 만든다.
+- PR 코드리뷰, inline comment, pending review
+- reviewer, label, milestone, project 변경
+- merge, close, reopen
 
-## 컨텍스트 수집
+범위 밖 작업이 함께 요청되면 이 스킬에서는 PR 설명/draft 보정만 처리하고, 나머지는
+수행하지 않는다고 분리 안내한다.
 
-- base branch를 `git remote show origin` 또는
-  `git symbolic-ref refs/remotes/origin/HEAD --short`로 찾는다. 실패하면
-  `main`, `master`, `develop` 순서로 확인한다.
-- `git fetch origin`으로 원격 상태를 갱신한다.
-- `gh pr view --json number,url,title,baseRefName,headRefName,state,isDraft`로
-  현재 branch의 기존 PR을 확인한다. 있으면 새 PR을 만들지 않는다.
-- `git log origin/<base>..HEAD --oneline --no-decorate`,
-  `git diff origin/<base>..HEAD --stat`, `git diff origin/<base>..HEAD`로
-  변경 범위와 의도를 분석한다.
+## 필수 점검
 
-작업 트리에 커밋되지 않은 변경이 있으면 PR에 포함할지 판단한다. 포함해야 하면
-리뷰어 친화적인 커밋 단위로 stage/commit한다. 커밋 단위가 애매하거나 unrelated
-변경이 섞여 있으면 사용자에게 묻는다.
+이 스킬은 GitHub CLI `gh`가 필요하다. `gh`가 없으면 PR 생성/수정을 진행하지 않고
+설치 방법을 안내한다.
 
-## 커밋과 푸시
+먼저 상태를 확인한다.
 
-- PR에 필요한 변경이 아직 커밋되지 않았으면 이 스킬 안에서 커밋할 수 있다.
-- 커밋 메시지는 가능하면 Conventional Commit을 사용하고 한국어 요약을 쓴다.
-- 더 정교한 커밋 분리가 필요하면 skillframe의 `commit` 흐름을 따른다.
-- branch가 원격에 없으면 PR 생성 전에 `git push -u origin HEAD`로 push한다.
-- rebase 또는 squash가 필요해 보이면 이유와 위험을 설명하고 사용자 승인을 받은 뒤 실행한다.
-- rebase 이후 push가 필요하면 `--force-with-lease`만 사용한다.
+```bash
+gh --version
+git status --short
+git branch --show-current
+gh auth status
+git fetch origin
+```
 
-## PR 생성 흐름
+`gh --version`이 실패하면 macOS에서는 `brew install gh`를 안내하고, 그 외 환경에서는
+GitHub CLI 설치 문서 `https://cli.github.com/`를 안내한다. `gh auth status`가 실패하면
+`gh auth login` 실행을 요청한다.
 
-1. title 후보를 만든다.
-   - `references/pr-title.md`의 규칙을 따른다.
-   - 리뷰어가 diff 방향을 예측할 수 있게 구체적으로 쓴다.
+항상 읽는다:
 
-2. body를 만든다.
-   - `references/pr-body.md`의 템플릿 탐색과 작성 규칙을 따른다.
-   - 검증 섹션에는 실제 실행한 명령과 결과를 쓴다.
-   - 검증하지 못한 항목은 "미실행"으로 명시하고 이유를 적는다.
+- `references/pr-title.md`
+- `references/pr-body.md`
+- `references/pr-tone.md`
+- repository PR template, 있으면 사용
 
-3. 생성 전 승인 게이트를 연다.
-   - PR title
-   - base branch와 head branch
-   - draft 여부
-   - PR body 전체
-   - push 여부와 현재 원격 branch 상태
+기존 PR을 확인한다. 생성 요청 중 기존 PR이 있으면 중복 PR 생성을 막기 위해 새 PR을
+만들지 않고, 기존 PR 링크와 만들지 않는 이유를 사용자에게 제공한다.
 
-4. 사용자가 승인한 뒤 임시 파일로 body를 저장하고 `gh pr create --title "<title>" --body-file /tmp/skillframe-create-pull-request-body.md --base <base>`로 생성한다. draft PR이면 `--draft`를 추가한다.
+```bash
+gh pr view --json number,url,title,baseRefName,headRefName,state,isDraft
+gh pr list --head "$(git branch --show-current)" --state open --json number,url,title,baseRefName,headRefName,state,isDraft
+```
 
-5. 생성 후 PR number 또는 URL만 핵심 결과로 보고한다. 필요한 경우 실행한 검증 명령을
-짧게 덧붙인다.
+## 사용자 확인
 
-## 오류 대응
+사용자의 입력 또는 선택이 필요하면 일반 메시지로 추측하지 않는다. 사용 가능한 환경에 맞춰
+Claude에서는 `AskUserQuestion`, Codex에서는 `user-input prompt`를 사용한다.
 
-- 커밋이 base보다 앞서 있지 않으면 다른 branch에서 작업했는지 확인한다.
-- branch가 push되지 않았으면 `git push -u origin HEAD`를 실행하거나 안내한다.
-- 기존 PR이 있으면 기존 PR URL을 보여주고 새 PR 생성을 중단한다.
-- merge conflict가 있으면 충돌 파일을 보여주고 rebase 또는 merge 전략을 제안한다.
-- PR body 템플릿을 찾지 못해도 중단하지 않고 `references/pr-body.md`를 따른다.
+반드시 확인한다:
+
+- 관련 여부가 애매한 변경을 stage/commit/push할지
+- branch 생성, rebase, amend, squash, force-push 여부
+- PR 내용과 draft 상태 승인
+- 기존 PR을 보정할지 새 요청을 중단할지
+
+## 생성 흐름
+
+1. base branch를 `origin/HEAD`, `main`, `master`, `develop` 순서로 찾고
+   `origin/<base>..HEAD` 범위를 분석한다.
+
+   ```bash
+   git log origin/<base>..HEAD --oneline --no-decorate
+   git diff origin/<base>..HEAD --stat
+   git diff origin/<base>..HEAD
+   ```
+
+2. 작업 트리에 커밋되지 않은 변경이 있으면 PR에 포함할지 판단한다. 관련 없는 변경은
+   stage, commit, push, stash, discard, revert하지 않는다.
+
+3. 커밋 요청이 포함된 경우 관련 변경만 선별 stage하고, 포함 파일과 commit message를
+   승인받은 뒤 commit한다. 복잡한 커밋 분리는 `skillframe-commit`을 사용한다.
+
+4. upstream이 없으면 branch가 맞는지 확인한 뒤 `git push -u origin HEAD`를 실행한다.
+   rebase, amend, squash, force-push는 명시 승인 없이 하지 않는다.
+
+5. `references/`와 repository template에 맞춰 한국어 PR 내용을 작성한다. 말투는
+   `references/pr-tone.md`를 따른다. 검증 섹션에는
+   실제 실행한 명령만 적고, 미실행 항목은 `미실행`과 이유를 적는다.
+
+6. 실행 전 사용자에게 PR 제목, base/head, draft 여부, 본문 전체, push 상태를 보여주고
+   승인받는다. 사용자가 ready를 명시하지 않으면 draft가 기본값이다.
+
+7. 승인받은 PR 본문을 임시 파일에 저장한 뒤, 승인 후에만 생성한다.
+
+   ```bash
+   gh pr create --title "<title>" --body-file <approved-body-file> --base <base> --draft
+   ```
+
+## 기존 PR 보정 흐름
+
+사용자가 기존 PR의 설명이나 draft 상태 보정을 명시한 경우에만 사용한다.
+
+1. 현재 branch PR 또는 사용자가 준 PR URL/번호를 읽는다.
+
+   ```bash
+   gh pr view <pr> --json number,url,title,body,baseRefName,headRefName,state,isDraft
+   ```
+
+2. `references/`, `references/pr-tone.md`, repository template에 맞춰 보정안을 만든다.
+   template 섹션과 체크박스는 보존한다. ready 전환은 사용자가 명시한 경우에만 제안한다.
+
+3. 실행 전 PR URL, 변경 전/후 제목, 변경 전/후 draft 상태, 교체할 본문 전체를 보여주고
+   승인받는다.
+
+4. 승인받은 PR 본문을 임시 파일에 저장한 뒤, 승인 후에만 수정한다.
+
+   ```bash
+   gh pr edit <pr> --title "<title>" --body-file <approved-body-file>
+   gh pr ready <pr>
+   ```
+
+   `gh pr ready`는 ready 전환이 승인된 경우에만 실행한다.
+
+## 위험 신호
+
+절대 하지 않는다:
+
+- `gh` 미설치 또는 미인증 상태에서 PR 생성/수정 진행
+- template/reference를 읽기 전 `gh pr create`, `gh pr edit`, `gh pr ready` 실행
+- open PR이 있는 branch에서 새 PR 생성
+- 승인 게이트 생략
+- `gh pr create --fill`로 PR 제목/본문 작성 대체
+- 실행하지 않은 테스트를 통과한 것처럼 기재
+- PR 코드리뷰, 댓글, merge 요청을 이 스킬로 처리
 
 ## 최종 보고
 
-완료 보고는 간결하게 한다.
+짧게 보고한다:
 
-- 새 PR number/URL
-- base/head와 draft 여부
-- 실행한 핵심 검증 명령이 있으면 한 줄
+- PR URL
+- base/head와 draft 상태
+- 생성인지 보정인지
+- 핵심 검증 결과, 있으면 포함
