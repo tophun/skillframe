@@ -23,6 +23,13 @@
 `humanize-korean`을 사용할 수 있고, `code-review`는 리뷰 범위 분석에
 `code-review-context`를 사용한다 — 별도 설치 불필요.
 
+## CI
+
+`.github/workflows/validate.yml`은 PR과 `main` push에서 다음을 검증합니다.
+
+- plugin manifest, frontmatter, 상대 링크, fast 경로 구조
+- TruffleHog 기반 credential scan (`verified`, `unknown` 결과 발견 시 실패)
+
 ## 에이전트
 
 `ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer`(strict) · `korean-ai-tell-taxonomist`(분류 체계 유지보수).
