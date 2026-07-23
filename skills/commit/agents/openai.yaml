@@ -1,4 +1,4 @@
 interface:
   display_name: "Commit"
   short_description: "Group changes into work-unit commits"
-  default_prompt: "Use $commit to review the current diff, group changes by common work unit, and create separate commits."
+  default_prompt: "Use $commit to review the current diff, merge same-purpose work into an unpushed commit when safe, and keep different purposes in separate commits."

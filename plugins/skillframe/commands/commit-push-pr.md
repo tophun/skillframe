@@ -18,7 +18,10 @@ Commit the current related changes, push a branch, and open one pull request.
 3. Check for an existing open PR on the current branch. Do not create a duplicate.
 4. If on `main` or another protected default branch, create a new `codex/` branch.
 5. Group the changes by common work unit and prepare one commit message per coherent group, plus a PR title/body using the repository's template and conventions.
-6. Before staging, committing, pushing, or creating the PR, show the proposed work-unit groups and paths, excluded files, branch/base, commit messages, complete PR body, draft state, and checks. Follow the repository's PR approval gate.
-7. After approval, stage explicit paths, inspect each staged diff, create one commit per work unit in dependency order, push with `git push -u origin HEAD`, and create a Draft PR with `gh pr create`. Use ready state only when explicitly requested.
+6. Before creating a new commit, compare each work unit with recent commits on the current branch. If it completes or directly follows the same purpose, prefer merging it into that commit: use `git commit --amend` for `HEAD`, or `git commit --fixup=<sha>` followed by `git rebase -i --autosquash <sha>^` for an older unpushed local commit.
+7. If the purpose differs, create a separate commit even when files or branch names are related. Never rewrite a pushed/shared commit by default; create a follow-up commit unless the user explicitly requests it.
+8. For an older commit, show the target SHA, reason, and rewritten commit list before rebasing.
+9. Before staging, committing, pushing, or creating the PR, show the proposed work-unit groups and paths, excluded files, branch/base, commit messages, complete PR body, draft state, and checks. Follow the repository's PR approval gate.
+10. After approval, stage explicit paths, inspect each staged diff, create one commit per work unit in dependency order, push with `git push -u origin HEAD`, and create a Draft PR with `gh pr create`. Use ready state only when explicitly requested.
 
-Do not merge, close, review, force-push, amend, rebase, or change labels/reviewers. Do not claim checks passed unless they were actually run.
+Do not merge, close, review, or change labels/reviewers. Do not force-push or rewrite pushed/shared history. Use amend or fixup/autosquash only for a matching unpushed local commit after approval. Do not claim checks passed unless they were actually run.
