@@ -14,15 +14,15 @@ Add this repo as a marketplace, then install the plugins:
 ```text
 /plugin marketplace add tophun/skillframe
 /plugin install humanize-korean@skillframe
-/plugin install skillframe-code-review@skillframe
+/plugin install code-review@skillframe
 ```
 
 | Plugin | Contains | Use when |
 | --- | --- | --- |
 | `humanize-korean` | skill `humanize-korean` · 6 agents | Rewrite AI-written Korean text to read naturally — detect and fix translationese / AI tells while preserving meaning. Say "AI 티 없애줘", "사람이 쓴 것처럼 윤문". |
-| `skillframe-code-review` | skill `skillframe-code-review` | Review a GitHub PR with multi-agent analysis and post **inline comments with code suggestions**; comment text is polished via `humanize-korean`. Say "코드리뷰", `/code-review`, or `$skillframe-code-review` with a PR link. |
+| `code-review` | skill `code-review` | Review a GitHub PR with multi-agent analysis and post **inline comments with code suggestions**; comment text is polished via `humanize-korean`. Say "코드리뷰", `/code-review`, or `$code-review` with a PR link. |
 
-Each plugin is focused and installed independently (official-marketplace style). `skillframe-code-review` uses `humanize-korean`, so install both.
+Each plugin is focused and installed independently (official-marketplace style). `code-review` uses `humanize-korean`, so install both.
 
 ## Codex skills (`npx skills add`)
 
@@ -56,9 +56,9 @@ plugins/
     .claude-plugin/plugin.json
     skills/humanize-korean/
     agents/                        # humanize-monolith + 5 agents
-  skillframe-code-review/          # code-review plugin (uses humanize-korean)
+  code-review/          # code-review plugin (uses humanize-korean)
     .claude-plugin/plugin.json
-    skills/skillframe-code-review/
+    skills/code-review/
 skills/                           # Codex skills pack (npx skills add)
   ai-dlc/
   create-pull-request/

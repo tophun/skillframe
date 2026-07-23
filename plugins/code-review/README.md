@@ -1,4 +1,4 @@
-# skillframe-code-review
+# code-review
 
 GitHub PR을 다단계 에이전트로 리뷰하고, 검증된 이슈만 **해당 코드 라인에 인라인 코멘트 + 코드 제안(suggestion)** 으로 남기는 Claude Code 플러그인.
 
@@ -18,9 +18,9 @@ GitHub PR을 다단계 에이전트로 리뷰하고, 검증된 이슈만 **해�
 ```text
 /plugin marketplace add tophun/skillframe
 /plugin install humanize-korean@skillframe
-/plugin install skillframe-code-review@skillframe
+/plugin install code-review@skillframe
 ```
 
 ## 사용
 
-PR 링크와 함께 "코드리뷰", "리뷰해줘", `/code-review`, `$skillframe-code-review`.
+PR 링크와 함께 "코드리뷰", "리뷰해줘", `/code-review`, `$code-review`.

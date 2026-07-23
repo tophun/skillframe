@@ -1,6 +1,6 @@
 ---
-name: skillframe-code-review
-description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "리뷰해줘", "PR 리뷰", "review this PR", "$skillframe-code-review", "/code-review"를 요청할 때 사용한다. 코드 변경을 검토해 GitHub에 리뷰를 남기려는 상황. 커밋 작성·PR 생성·머지·라벨/리뷰어 변경에는 사용하지 않는다(그건 skillframe-create-pull-request 담당).
+name: code-review
+description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "리뷰해줘", "PR 리뷰", "review this PR", "$code-review", "/code-review"를 요청할 때 사용한다. 코드 변경을 검토해 GitHub에 리뷰를 남기려는 상황. 커밋 작성·PR 생성·머지·라벨/리뷰어 변경에는 사용하지 않는다(그건 skillframe-create-pull-request 담당).
 ---
 
 # Skillframe: Code Review
@@ -16,7 +16,7 @@ GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해�
 
 ## 언제 쓰나 / 안 쓰나
 
-- **쓴다:** PR 링크/번호 + "코드리뷰/리뷰해줘/review this PR", `/code-review`, `$skillframe-code-review`
+- **쓴다:** PR 링크/번호 + "코드리뷰/리뷰해줘/review this PR", `/code-review`, `$code-review`
 - **안 쓴다:** 커밋 작성(→ 플러그인 commit 스킬), PR 생성/본문 수정(→ `skillframe-create-pull-request`), 머지·라벨·리뷰어 변경
 
 ## 워크플로우
