@@ -1,4 +1,0 @@
-interface:
-  display_name: "Skillframe: Commit"
-  short_description: "Korean commit workflow"
-  default_prompt: "Use $skillframe-commit for the skillframe Korean commit workflow."

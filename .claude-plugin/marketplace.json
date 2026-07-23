@@ -1,0 +1,18 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "skillframe",
+  "version": "1.0.0",
+  "description": "Personal Claude Code plugins for Korean git and code-review workflows.",
+  "owner": {
+    "name": "tophun",
+    "url": "https://github.com/tophun/skillframe"
+  },
+  "plugins": [
+    {
+      "name": "skillframe-code-review",
+      "description": "GitHub PR을 다단계로 리뷰하고 인라인 코멘트 + 코드 제안으로 게시. 코멘트 윤문용 humanize-korean 스킬과 실행 에이전트를 함께 번들한다.",
+      "source": "./plugins/skillframe-code-review",
+      "category": "code-review"
+    }
+  ]
+}
