@@ -5,8 +5,9 @@ Personal Codex skills and Claude Code plugins for Korean git, code-review, and A
 This repo serves three things:
 
 1. A **Codex skills pack** (install with `npx skills add`) — `skills/`
-2. A **Codex custom prompt pack** (install into `~/.codex/prompts/`) — `prompts/`
-3. A **Claude Code plugin marketplace** (install with `/plugin`) — `.claude-plugin/marketplace.json` + `plugins/`
+2. A **Codex plugin** (install with `codex plugin`) — `.agents/plugins/marketplace.json` + `plugins/skillframe-codex/`
+3. A **Codex custom prompt pack** (install into `~/.codex/prompts/`) — `prompts/`
+4. A **Claude Code plugin marketplace** (install with `/plugin`) — `.claude-plugin/marketplace.json` + `plugins/skillframe/`
 
 ## Claude Code plugin (marketplace)
 
@@ -35,6 +36,41 @@ The plugin also provides:
 | `/clean_gone` | Inspect and safely remove local branches marked `[gone]`. |
 
 `create-pull-request` and `code-review` can use `humanize-korean` for PR/review wording; all ship in one plugin, so a single install covers everything.
+
+## Codex plugin
+
+The repository also includes a Codex-native plugin at
+`plugins/skillframe-codex/`. It uses the required
+`.codex-plugin/plugin.json` manifest and is exposed through the repo marketplace
+at `.agents/plugins/marketplace.json`.
+
+From the repository root, install it with:
+
+```bash
+codex plugin marketplace add .
+codex plugin add skillframe-codex@personal
+```
+
+Check the marketplace and installed plugin:
+
+```bash
+codex plugin marketplace list
+codex plugin list
+```
+
+Start a new Codex thread or session after installation. You can invoke the
+plugin explicitly with `@skillframe-codex`, or ask Codex to use one of its
+bundled skills:
+
+| Skill | Use when |
+| --- | --- |
+| `ai-dlc` | Run an AI-Driven Development Lifecycle workflow with plan-first gates. |
+| `create-pull-request` | Create a GitHub PR with Korean title/body conventions and an approval gate. |
+
+For local plugin changes, update the plugin source, refresh or reinstall it
+from the configured marketplace, and start a new thread so Codex loads the new
+bundle. See the [Codex plugin README](plugins/skillframe-codex/README.md) for
+the short install guide.
 
 ## Codex skills (`npx skills add`)
 
@@ -87,8 +123,10 @@ The prompts are the slash-command entry points; the corresponding files under
 ```text
 .claude-plugin/
   marketplace.json                 # Claude Code marketplace listing
+.agents/
+  plugins/marketplace.json         # Codex repo marketplace listing
 plugins/
-  skillframe/                      # the plugin
+  skillframe/                      # Claude Code plugin
     .claude-plugin/plugin.json
     commands/
       commit.md                    # -> /commit
@@ -100,7 +138,11 @@ plugins/
       code-review-context/         # -> skillframe:code-review-context
       humanize-korean/             # -> skillframe:humanize-korean
     agents/                        # humanize-monolith + 5 agents
-skills/                           # Codex skills pack (npx skills add)
+  skillframe-codex/                # Codex plugin package
+    .codex-plugin/plugin.json
+    README.md
+    skills/                        # bundled Codex skills
+skills/                            # Codex skills pack (npx skills add)
   ai-dlc/
   clean-gone/
   commit/
