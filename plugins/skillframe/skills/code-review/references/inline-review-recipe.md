@@ -22,7 +22,6 @@ git show origin/{branch}:{path} | sed -n '{start},{end}p'
 {
   "commit_id": "<PR head 40자리 SHA>",
   "event": "COMMENT",
-  "body": "### Code review\n\n인라인으로 N건 남겼습니다.\n\n🤖 Generated with [Claude Code](https://claude.ai/code)",
   "comments": [
     {
       "path": "apps/.../page.tsx",
@@ -44,7 +43,8 @@ git show origin/{branch}:{path} | sed -n '{start},{end}p'
 }
 ```
 
-- 본문 `body`에 `### Code review`를 포함해야 적격성 재확인(중복 리뷰 방지)이 동작한다.
+- 최상위 review-level `body`는 의도적으로 생략한다. `### Code review`, 리뷰 요약, `Generated with Claude Code` 문구를 추가하지 않는다.
+- 인라인 코멘트의 각 `comments[].body`에만 문제 설명과 필요한 `suggestion`을 작성한다.
 - `event: "COMMENT"` — 승인/변경요청 없이 코멘트만. (approve/request-changes 아님)
 
 ## 3. suggestion 블록 규칙
@@ -64,6 +64,10 @@ git show origin/{branch}:{path} | sed -n '{start},{end}p'
 ```bash
 gh api -X POST repos/{owner/repo}/pulls/{n}/reviews --input payload.json \
   --jq '{id, state, html_url}'
+
+# review-level body가 비어 있는지 확인
+gh api repos/{owner/repo}/pulls/{n}/reviews/{reviewId} \
+  --jq '{body, state, comments: .comments}'
 
 # 라인·suggestion 부착 확인
 gh api repos/{owner/repo}/pulls/{n}/comments \
