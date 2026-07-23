@@ -30,7 +30,7 @@ GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해�
 4. **신뢰도 스코어링 (이슈별 Haiku)** — 각 이슈를 0-100으로 채점(루브릭·false positive 목록은 `references/scoring-rubric.md`). **80점 미만 제외.** 남는 게 없으면 중단.
 5. **적격성 재확인 (Haiku)** — 게시 직전 1단계 조건을 다시 확인.
 6. **사용자 승인** — 살아남은 이슈 목록을 보여주고 게시 범위를 확인받는다. 임계값(80)에 아깝게 못 미친 실질 이슈가 있으면 함께 공유해 판단을 맡긴다.
-7. **코멘트 윤문** — `humanize-korean` fast 모드로 각 코멘트 문장을 다듬는다. 이 스킬은 같은 마켓플레이스의 **`humanize-korean` 플러그인**을 사용하므로 함께 설치해야 한다(`/plugin install humanize-korean@skillframe`).
+7. **코멘트 윤문** — `humanize-korean` fast 모드로 각 코멘트 문장을 다듬는다. 이 스킬(`skillframe:humanize-korean`)과 실행 에이전트는 **같은 `skillframe` 플러그인에 함께 들어 있어** 별도 설치가 필요 없다.
 8. **인라인 리뷰 게시** — `gh api .../pulls/{n}/reviews`에 인라인 코멘트 + suggestion 페이로드로 게시. 상세 recipe는 `references/inline-review-recipe.md`.
 
 ## 쉽게 쓰는 코멘트 3단 구조

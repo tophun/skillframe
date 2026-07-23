@@ -1,0 +1,19 @@
+{
+  "name": "skillframe",
+  "version": "0.1.0",
+  "description": "개인용 코드리뷰 + 한국어 윤문 플러그인. skillframe:code-review는 GitHub PR을 다단계 리뷰해 인라인 코멘트 + 코드 제안으로 게시하고, skillframe:humanize-korean은 코멘트/한글 텍스트의 AI 티를 자연스럽게 윤문한다.",
+  "author": {
+    "name": "tophun"
+  },
+  "keywords": [
+    "code-review",
+    "pull-request",
+    "github",
+    "inline-comment",
+    "suggestion",
+    "humanize",
+    "korean",
+    "번역투",
+    "윤문"
+  ]
+}

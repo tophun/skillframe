@@ -9,15 +9,9 @@
   },
   "plugins": [
     {
-      "name": "humanize-korean",
-      "description": "AI가 쓴 한글 텍스트를 사람이 쓴 글처럼 윤문하는 오케스트레이터. 번역투·AI 티 패턴을 탐지해 내용은 그대로 두고 문체만 자연스럽게 재작성. fast/strict 모드.",
-      "source": "./plugins/humanize-korean",
-      "category": "productivity"
-    },
-    {
-      "name": "code-review",
-      "description": "GitHub PR을 다단계로 리뷰하고 인라인 코멘트 + 코드 제안(suggestion)으로 게시. 코멘트 윤문에 humanize-korean 플러그인을 사용한다(함께 설치).",
-      "source": "./plugins/code-review",
+      "name": "skillframe",
+      "description": "개인용 코드리뷰 + 한국어 윤문 플러그인. skillframe:code-review(PR 다단계 리뷰 → 인라인 코멘트 + 코드 제안 게시) + skillframe:humanize-korean(AI 티 윤문). 코드리뷰가 윤문에 humanize-korean을 사용.",
+      "source": "./plugins/skillframe",
       "category": "code-review"
     }
   ]
