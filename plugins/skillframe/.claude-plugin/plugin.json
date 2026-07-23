@@ -1,7 +1,7 @@
 {
   "name": "skillframe",
   "version": "0.1.0",
-  "description": "개인용 PR 생성 + 코드리뷰 + 한국어 윤문 플러그인. skillframe:create-pull-request는 GitHub PR 생성/본문 보정을 승인 게이트로 처리하고, skillframe:code-review는 PR을 다단계 리뷰해 인라인 코멘트 + 코드 제안으로 게시하며, skillframe:humanize-korean은 코멘트/한글 텍스트의 AI 티를 자연스럽게 윤문한다.",
+  "description": "개인용 PR 생성 + 코드리뷰 컨텍스트 분석 + 한국어 윤문 플러그인. skillframe:create-pull-request는 GitHub PR 생성/본문 보정을 승인 게이트로 처리하고, skillframe:code-review-context는 diff와 codegraph로 리뷰 영향 범위를 좁히며, skillframe:code-review는 PR을 다단계 리뷰해 인라인 코멘트 + 코드 제안으로 게시하고, skillframe:humanize-korean은 코멘트/한글 텍스트의 AI 티를 자연스럽게 윤문한다.",
   "author": {
     "name": "tophun"
   },
