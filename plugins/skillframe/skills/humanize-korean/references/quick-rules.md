@@ -1,6 +1,6 @@
-# Quick Rules — Monolith Fast Path 전용 (v2.0)
+# Quick Rules — Skill Fast Path 전용 (v2.0)
 
-`humanize-monolith` 에이전트가 한 콜에서 탐지·윤문·자체검증을 끝내기 위해 사용하는 슬림 룰북. 본진 `ai-tell-taxonomy.md`(590줄)에서 S1·S2 핵심 패턴만 추려 처방과 함께 한 줄로 압축했다.
+`humanize-korean` 스킬이 fast 경로에서 탐지·윤문·자체검증을 끝내기 위해 사용하는 슬림 룰북. 본진 `ai-tell-taxonomy.md`(590줄)에서 S1·S2 핵심 패턴만 추려 처방과 함께 한 줄로 압축했다.
 
 **원칙:** 정의 1줄 + 처방 1줄. 예문 생략. 본진 ID와 1:1 매칭.
 
