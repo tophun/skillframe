@@ -1,29 +1,30 @@
 ---
 name: humanize-korean
-version: "1.5.0"
-description: AI(ChatGPT·Claude·Gemini 등)가 쓴 한글 텍스트를 "사람이 쓴 글처럼" 윤문해주는 오케스트레이터 스킬. 번역투·영어 인용 과다·기계적 병렬·관용구·피동태 남용·접속사 남발·리듬 균일성·이모지/불릿 과다 등 10대 카테고리 40+ AI 티 패턴을 탐지·분류해 내용은 한 글자도 건드리지 않고 문체·리듬·표현만 자연스러운 한국어로 재작성한다. 트리거 — "AI 티 없애줘", "AI 같은 글 자연스럽게", "GPT/ChatGPT 문체", "AI 번역투 고쳐", "사람이 쓴 것처럼 윤문", "AI 윤문", "ChatGPT 티 제거", "한글 AI 탐지·윤문", "AI 글 사람처럼", "번역투 제거", "영어 인용 많은 글 윤문", "AI 글 티 안 나게", "휴머나이저", "humanize Korean", "AI detector bypass 한글". 후속 작업 — "특정 카테고리만 다시", "윤문 강도 조정", "장르 바꿔서", "이 문단만", "2차 윤문" 도 모두 이 스킬. 단순 맞춤법·오탈자 교정은 직접 처리, 번역은 번역 스킬, 내용 추가·삭제를 동반한 재작성은 별도 집필 스킬.
+version: "1.6.0"
+description: AI(ChatGPT·Claude·Gemini 등)가 쓴 한글 텍스트를 "사람이 쓴 글처럼" 윤문하는 스킬. 기본 fast 경로는 에이전트 없이 탐지·윤문·자가검증을 수행하고, 필요할 때만 strict 검증 에이전트를 사용한다. 번역투·영어 인용 과다·기계적 병렬·관용구·피동태 남용·접속사 남발·리듬 균일성·이모지/불릿 과다 등 10대 카테고리 40+ AI 티 패턴을 다루며, 내용은 한 글자도 건드리지 않고 문체·리듬·표현만 자연스러운 한국어로 재작성한다. 트리거 — "AI 티 없애줘", "AI 같은 글 자연스럽게", "GPT/ChatGPT 문체", "AI 번역투 고쳐", "사람이 쓴 것처럼 윤문", "AI 윤문", "ChatGPT 티 제거", "한글 AI 탐지·윤문", "AI 글 사람처럼", "번역투 제거", "영어 인용 많은 글 윤문", "AI 글 티 안 나게", "휴머나이저", "humanize Korean", "AI detector bypass 한글". 후속 작업 — "특정 카테고리만 다시", "윤문 강도 조정", "장르 바꿔서", "이 문단만", "2차 윤문"도 모두 이 스킬. 단순 맞춤법·오탈자 교정은 직접 처리, 번역은 번역 스킬, 내용 추가·삭제를 동반한 재작성은 별도 집필 스킬.
 ---
 
-# Humanize Korean — AI 한글 티 제거 오케스트레이터 (v1.5)
+# Humanize Korean — AI 한글 티 제거 스킬 (v1.6)
 
-> **v1.5 변경 고지 (2026-04-26) — v1.1 베이스라인 + Monolith Fast Path**
-> v1.2(voice profile)·v1.3(candidate pool)·v1.4(역할별 모델 분산)는 모두 핫패스 비용을 잡지 못해 5,000자 입력에 25분이 걸렸습니다. v1.5는 **v1.1 단순 구조로 롤백한 뒤 단일 호출 monolith 에이전트만 추가**한 설계입니다.
+> **v1.6 변경 고지 — 스킬 중심 실행 구조**
+> 기본 fast 경로는 이 스킬이 직접 탐지·윤문·자가검증을 수행합니다. 별도 에이전트 호출은 없으며, 독립적인 검증이 필요한 경우에만 strict 경로를 선택합니다.
 >
-> - **Fast 모드(디폴트)** — `humanize-monolith` 에이전트가 한 콜에서 탐지·윤문·자체검증 일괄 처리. 도구 호출 4~5회. 5,000자 이하 wall-clock 2~3분 목표.
-> - **Strict 모드(`--strict`)** — v1.1 5인 파이프라인 그대로(detector·rewriter·auditor·reviewer + taxonomist 분류 자산 유지). 정밀 검증·장문(8,000자+) 처리·etc.
+> - **Fast 모드(디폴트)** — 스킬이 `quick-rules.md`를 읽고 탐지·윤문·자가검증을 한 번에 수행합니다. 5,000자 이하 입력을 권장합니다.
+> - **Strict 모드(`--strict`)** — detector·rewriter·auditor·reviewer 4개 에이전트를 사용합니다. 정밀 검증·장문(8,000자+) 처리에 적합합니다.
+> - **분류 체계 유지보수** — `korean-ai-tell-taxonomist`는 일반 윤문에 참여하지 않고 taxonomy 변경 작업에만 사용합니다.
 > - **삭제됨**: voice profile·candidate pool·promotion-checklist·sample-collection·권한 위계 §1~§6.
-> - **유지됨**: 분류 체계 본진(C-9·C-10·D-7·H-3·I-3·I-4 등 v1.2~v1.3.1 신규 패턴)·rewriting-playbook·5인 에이전트 정의(strict 모드 백본).
+> - **유지됨**: 분류 체계 본진·rewriting-playbook·strict 검증 에이전트 정의.
 
 ## Phase 0: 컨텍스트 확인 및 모드 결정
 
 작업 시작 시 가장 먼저 다음 한 줄을 사용자에게 출력한다.
 
 ```
-humanize-korean v1.5 — {fast|strict} 모드 / run_id: {YYYY-MM-DD-NNN}
+humanize-korean v1.6 — {fast|strict} 모드 / run_id: {YYYY-MM-DD-NNN}
 ```
 
 ### 모드 결정
-- 사용자가 `--strict`·"정밀 모드"·"5인 파이프라인" 명시 → **strict**
+- 사용자가 `--strict`·"정밀 모드"·"4개 에이전트 strict 파이프라인" 명시 → **strict**
 - 입력 8,000자 초과 → **strict** (자동 승급 + 사용자에 1줄 고지)
 - 그 외 모두 → **fast (디폴트)**
 
@@ -43,38 +44,33 @@ humanize-korean v1.5 — {fast|strict} 모드 / run_id: {YYYY-MM-DD-NNN}
 2. 입력 텍스트를 `01_input.txt`에 저장
 3. 첫 300자로 장르 자동 추정 (사용자 명시 시 우선)
 
-### Phase 2: Monolith 호출
-`humanize-monolith` 에이전트를 `Agent` 도구로 1회 호출.
+### Phase 2: 스킬 직접 실행
+별도 에이전트를 호출하지 않고 이 스킬의 지침에 따라 다음을 순서대로 수행한다.
 
-입력:
-```
-input_path: <abs path>/_workspace/{run_id}/01_input.txt
-quick_rules_path: ${CLAUDE_SKILL_DIR}/references/quick-rules.md
-genre_hint: 칼럼 | 리포트 | 블로그 | 공적 | null
-```
+1. `references/quick-rules.md`를 읽고 S1·S2 패턴과 Do-NOT 목록을 로드한다.
+2. 원문을 메모리에서 스캔해 finding을 수집한다. 고유명사·수치·날짜·단위·직접 인용·법률 조문·수식·표준 영어 약어는 제외한다.
+3. finding이 있는 구간만 `rewriting-playbook.md`의 처방에 따라 윤문한다. 입력 장르와 register를 유지한다.
+4. 변경률·의미 보존·장르·register·잔존 S1·인공 표현 추가 여부를 자체검증한다.
+5. 자체검증 위반 시 해당 edit을 롤백하고 한 번만 재실행한다.
 
-출력 (에이전트가 직접 작성):
-- `_workspace/{run_id}/final.md` — 윤문본
+출력:
+- `_workspace/{run_id}/final.md` — 윤문 본문
 - `_workspace/{run_id}/summary.md` — 메트릭·자체검증·하이라이트
 
-monolith는 단일 호출 안에서 다음을 모두 수행 (자세히는 에이전트 정의 참조):
-1. quick-rules 룰북 로드 → 메모리에서 패턴 탐지 + 윤문 + 자체검증 6항 점검
-2. 변경률 50% 초과 시 자동 롤백
-3. 자체검증 위반 시 1회 부분 재실행
-4. final.md + summary.md 작성
+`final.md`와 `summary.md`의 포맷은 fast와 strict에서 동일하게 유지한다.
 
 ### Phase 3: 결과 전달
 사용자에게 다음 4개를 반환:
 1. 한 줄 상태: `완료. 변경률 X% / 등급 Y / 자체검증 N/6 통과`
 2. 윤문본 본문 (마크다운 블록)
 3. summary.md의 핵심 표 (메트릭 + 카테고리 탐지 + 자체검증)
-4. 등급 B 이하면 "정밀 검증이 필요하면 `--strict`로 5인 파이프라인" 안내
+4. 등급 B 이하면 "정밀 검증이 필요하면 `--strict`로 4개 에이전트 strict 파이프라인을 실행할 수 있음" 안내
 
 **디폴트 wall-clock 목표:** 5,000자 이하 2~3분, 8,000자 5~7분.
 
 ## Strict 모드 (`--strict` 또는 자동 승급)
 
-v1.1 5인 파이프라인 그대로. 검증 분리·재윤문 루프가 의미 있을 때만 사용.
+검증 분리·재윤문 루프가 의미 있을 때만 사용한다. strict의 실행 에이전트는 4개이며, taxonomy maintainer는 일반 실행에 포함하지 않는다.
 
 ### Phase A: 탐지
 `ai-tell-detector` 호출 → `02_detection.json`
@@ -119,14 +115,14 @@ v1.1 5인 파이프라인 그대로. 검증 분리·재윤문 루프가 의미 �
 - `장르: 칼럼|리포트|블로그|공적` — 장르 명시 (생략 시 자동 추정)
 - `강도: 보수|기본|적극` — 윤문 강도 (기본값: 기본)
 - `최소심각도: S1|S2|S3` — 탐지 임계값 (기본값: S2)
-- `--strict` — 5인 파이프라인 강제 사용
+- `--strict` — 4개 에이전트 strict 파이프라인 강제 사용
 
 ## 데이터 흐름 요약
 
 ### Fast 모드 (디폴트)
 ```
 01_input.txt
-    ↓ [humanize-monolith — 단일 호출]
+    ↓ [humanize-korean 스킬]
     ├ 메모리: quick-rules 로드 → 탐지 → 윤문 → 자체검증
     └→ final.md + summary.md
 ```
@@ -150,32 +146,33 @@ v1.1 5인 파이프라인 그대로. 검증 분리·재윤문 루프가 의미 �
 
 **모델:** 모두 `model: opus` 통일 (v1.1 베이스라인). 모델 다운그레이드는 v1.4에서 시도했으나 도구 호출 chain이 진짜 병목이라 효과 미미했음.
 
-**에이전트 정의 위치:** 저장소 루트 `agents/`에 12종 정의(플러그인 컨벤션). Claude Code 탐색 경로:
+**에이전트 정의 위치:** 저장소의 `plugins/skillframe/agents/`에 strict 및 유지보수용 에이전트 정의. Claude Code 탐색 경로:
 1. 플러그인 설치 시 — `humanize-korean` 플러그인이 `agents/`를 번들로 제공(전역).
 2. 스크립트 설치 시 — `install.sh`가 `agents/*.md`를 `~/.claude/agents/`에 심링크(전역).
 
-필요 에이전트 6종:
-- `humanize-monolith` (v1.5 신규, fast 전용)
-- `ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer` (strict 5인 중 4명)
-- `korean-ai-tell-taxonomist` (분류 체계 유지·확장 — 본 스킬 실행 중에는 호출 안 됨, 별도 명령으로만 트리거)
+필요 에이전트 5종:
+- `ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer` (strict 실행용)
+- `korean-ai-tell-taxonomist` (분류 체계 유지·확장용, 일반 윤문에서는 호출하지 않음)
+
+`humanize-monolith`는 이전 fast 경로의 호환용 정의이며 새 실행 경로에서는 사용하지 않는다.
 
 ## 테스트 시나리오
 
 ### Fast 정상 흐름
 - 입력: ChatGPT가 생성한 AI 칼럼 초안 (2,000~5,000자, 번역투·결말 공식·hype 어휘 풍부)
-- 기대: monolith 1콜로 변경률 15~25%, 등급 A/B, wall-clock 2~3분, 자체검증 5~6/6
+- 기대: 에이전트 호출 없이 변경률 15~25%, 등급 A/B, 자체검증 5~6/6
 
 ### Strict 정밀 검증 흐름
 - 사용자 명시 `--strict` 또는 8,000자+ 입력
-- 5인 파이프라인 끝까지 실행, 변경률 18~22%, 검증팀 full_pass
+- 4개 에이전트 strict 파이프라인 끝까지 실행, 변경률 18~22%, 검증팀 full_pass
 
 ### 엣지 케이스 — 이미 사람이 쓴 글
-- monolith 자체 탐지에서 매치 거의 없음 → 변경률 5% 미만 + summary.md에 "윤문 불필요 가능성" 메모
+- 스킬 자체 탐지에서 매치 거의 없음 → 변경률 5% 미만 + summary.md에 "윤문 불필요 가능성" 메모
 - 사용자가 `--strict`로 강제 검증 가능
 
 ## 주의 사항
 
-- **의미 불변이 최상위 불문율.** monolith·strict 모두에서 위반 즉시 롤백.
+- **의미 불변이 최상위 불문율.** fast·strict 모두에서 위반 즉시 롤백.
 - **수치·고유명사·직접 인용은 탐지/윤문 대상 아님.** Do-NOT list 엄수.
 - **장르 이탈 금지.** 칼럼이 에세이로, 에세이가 문학으로 옮겨가지 않는다.
 - **register 보존.** 격식체 입력 → 격식체 출력. AI 티는 문법·수사이지 격식 자체가 아님.

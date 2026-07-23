@@ -25,7 +25,9 @@
 
 ## 에이전트
 
-`humanize-monolith`(fast) · `ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer` · `korean-ai-tell-taxonomist`(strict 파이프라인).
+`ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer`(strict) · `korean-ai-tell-taxonomist`(분류 체계 유지보수).
+
+기본 fast 경로는 `humanize-korean` 스킬이 에이전트 없이 직접 처리합니다. 기존 `humanize-monolith`는 호환용으로만 보존되어 새 실행 경로에서는 사용하지 않습니다.
 
 ## 설치
 
@@ -42,4 +44,5 @@ Codex에서 같은 명령을 슬래시 명령으로 사용하려면 레포 루�
 
 - PR 생성/보정: "PR 만들어줘", "PR 올려줘", "PR 본문 고쳐줘", `/pr`
 - 코드리뷰: PR 링크와 함께 "코드리뷰", "리뷰해줘", `/code-review`
-- 윤문: "AI 티 없애줘", "사람이 쓴 것처럼 윤문"
+- 윤문 fast(기본): "AI 티 없애줘", "사람이 쓴 것처럼 윤문"
+- 윤문 strict(선택): `--strict` 또는 "정밀 모드"
