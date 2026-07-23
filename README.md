@@ -16,14 +16,15 @@ Add this repo as a marketplace, then install the plugin:
 /plugin install skillframe@skillframe
 ```
 
-The `skillframe` plugin exposes two skills:
+The `skillframe` plugin exposes three skills:
 
 | Skill | Use when |
 | --- | --- |
+| `skillframe:create-pull-request` | Create a new GitHub PR or repair an existing PR body/draft state with Korean title/body rules and an approval gate before `gh pr create/edit/ready`. Say "PR 만들어줘", `/pr`, or "PR 본문 고쳐줘". |
 | `skillframe:code-review` | Review a GitHub PR with multi-agent analysis and post **inline comments with code suggestions**; comment text is polished via `humanize-korean`. Say "코드리뷰", `/code-review` with a PR link. |
 | `skillframe:humanize-korean` | Rewrite AI-written Korean text to read naturally — detect and fix translationese / AI tells while preserving meaning. Say "AI 티 없애줘", "사람이 쓴 것처럼 윤문". |
 
-`code-review` uses `humanize-korean` internally; both ship in the one plugin, so a single install covers everything.
+`create-pull-request` and `code-review` can use `humanize-korean` for PR/review wording; all ship in one plugin, so a single install covers everything.
 
 ## Codex skills (`npx skills add`)
 
@@ -56,6 +57,7 @@ plugins/
   skillframe/                      # the plugin
     .claude-plugin/plugin.json
     skills/
+      create-pull-request/         # -> skillframe:create-pull-request
       code-review/                 # -> skillframe:code-review
       humanize-korean/             # -> skillframe:humanize-korean
     agents/                        # humanize-monolith + 5 agents
