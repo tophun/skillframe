@@ -7,12 +7,13 @@ description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "�
 
 GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해당 코드 라인에 인라인 코멘트 + 코드 제안(suggestion)** 으로 남기는 개인 코드리뷰 워크플로우. 코멘트 문장은 게시 전 `humanize-korean` 스킬로 다듬어 동료가 바로 이해하게 만든다.
 
-## 핵심 원칙 (이 4가지가 이 스킬의 존재 이유)
+## 핵심 원칙 (이 5가지가 이 스킬의 존재 이유)
 
 1. **인라인으로 남긴다.** 최상단 일반 코멘트(`gh pr comment`)가 아니라, 문제가 있는 정확한 코드 라인에 인라인 리뷰 코멘트(`gh api .../pulls/{n}/reviews`)로 남긴다.
-2. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 리뷰어가 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
-3. **문장을 윤문한다.** 게시 전 `humanize-korean`(fast 모드)으로 코멘트 문장을 다듬는다. 백틱 안 코드 식별자는 절대 수정 금지.
-4. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 사용자에게 먼저 확인받는다.
+2. **구조를 파악한다.** `code-review-context` 스킬로 diff를 먼저 읽고, 변경 영향도가 넓을 때만 codegraph의 caller/callee와 관련 테스트까지 확장한다.
+3. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 리뷰어가 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
+4. **문장을 윤문한다.** 게시 전 `humanize-korean`(fast 모드)으로 코멘트 문장을 다듬는다. 백틱 안 코드 식별자는 절대 수정 금지.
+5. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 사용자에게 먼저 확인받는다.
 
 ## 언제 쓰나 / 안 쓰나
 
@@ -25,7 +26,7 @@ GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해�
 
 1. **적격성 확인 (Haiku)** — PR이 (a) closed/merged, (b) draft, (c) 자동/사소, (d) 이미 "### Code review" 코멘트 존재 중 하나면 중단.
    `gh pr view {n} --repo {owner/repo} --json state,isDraft,mergedAt,closed`, `--comments`
-2. **컨텍스트 수집 (병렬 Haiku)** — 관련 CLAUDE.md 경로 목록 + PR 요약(`gh pr diff {n}`).
+2. **컨텍스트 수집 (병렬 Haiku)** — 관련 CLAUDE.md 경로 목록 + PR 요약(`gh pr diff {n}`). 이 단계에서 `$code-review-context`를 적용한다. diff를 기준으로 리뷰 깊이를 정하고, 저장소가 크거나 변경이 모듈 경계를 넘거나 공용·고위험 경로를 건드린 경우에만 codegraph를 조건부로 `init`/`index`하고 영향 심볼의 caller/callee·구현체·테스트를 제한적으로 조회한다. codegraph가 없거나 stale하면 수동 탐색으로 계속하고 confidence를 기록한다.
 3. **병렬 리뷰 (5개 Sonnet)** — ① CLAUDE.md 준수(없으면 생략) ② 변경 라인만 얕은 버그 스캔 ③ git blame/history 회귀 ④ 이전 PR 코멘트 재적용 ⑤ 코드 주석/불변식 위반.
 4. **신뢰도 스코어링 (이슈별 Haiku)** — 각 이슈를 0-100으로 채점(루브릭·false positive 목록은 `references/scoring-rubric.md`). **80점 미만 제외.** 남는 게 없으면 중단.
 5. **적격성 재확인 (Haiku)** — 게시 직전 1단계 조건을 다시 확인.
