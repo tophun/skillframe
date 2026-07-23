@@ -1,7 +1,7 @@
 {
   "name": "skillframe-codex",
-  "version": "0.1.0",
-  "description": "Reusable Codex workflows for GitHub PRs and AI-Driven Development Lifecycle work.",
+  "version": "0.2.0",
+  "description": "Reusable Codex workflows for GitHub PRs, code reviews, and AI-Driven Development Lifecycle work.",
   "author": {
     "name": "tophun",
     "url": "https://github.com/tophun"
@@ -13,18 +13,20 @@
     "git",
     "github",
     "pull-request",
+    "code-review",
     "ai-dlc"
   ],
   "skills": "./skills/",
   "interface": {
     "displayName": "Skillframe Codex",
-    "shortDescription": "GitHub PR and AI-DLC workflows for Codex.",
-    "longDescription": "Bundle reusable Codex skills for GitHub pull requests and AI-Driven Development Lifecycle workflows.",
+    "shortDescription": "GitHub PR, code review, and AI-DLC workflows for Codex.",
+    "longDescription": "Bundle reusable Codex skills for GitHub pull requests, pending inline code reviews, and AI-Driven Development Lifecycle workflows.",
     "developerName": "tophun",
     "category": "Developer Tools",
     "capabilities": ["Read", "Write"],
     "defaultPrompt": [
       "Use Skillframe Codex to create a GitHub PR.",
+      "Use Skillframe Codex to review a GitHub PR.",
       "Use Skillframe Codex to run an AI-DLC workflow."
     ]
   }

@@ -66,6 +66,8 @@ bundled skills:
 | --- | --- |
 | `ai-dlc` | Run an AI-Driven Development Lifecycle workflow with plan-first gates. |
 | `create-pull-request` | Create a GitHub PR with Korean title/body conventions and an approval gate. |
+| `code-review` | Review a GitHub PR and create a pending inline review draft without submitting it. |
+| `code-review-context` | Build focused review context from the diff and affected callers, callees, and tests. |
 
 For local plugin changes, update the plugin source, refresh or reinstall it
 from the configured marketplace, and start a new thread so Codex loads the new
