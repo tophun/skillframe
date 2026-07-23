@@ -42,9 +42,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # v3.95.3 release commit. Keep the action and scanner version pinned.
+      # v3.95.3 release commit. The container tag is 3.95.3 (without the v prefix).
       - name: Scan changed commits
         uses: trufflesecurity/trufflehog@37b77001d0174ebec2fcca2bd83ff83a6d45a3ab
         with:
-          version: v3.95.3
+          version: 3.95.3
           extra_args: --results=verified,unknown
