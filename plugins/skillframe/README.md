@@ -1,6 +1,6 @@
 # skillframe (plugin)
 
-개인용 PR 생성 + 코드리뷰 컨텍스트 분석 + 한국어 윤문 Claude Code 플러그인.
+개인용 Git 커밋/PR 흐름 + 코드리뷰 컨텍스트 분석 + 한국어 윤문 Claude Code 플러그인.
 
 ## 스킬
 
@@ -10,6 +10,14 @@
 | `skillframe:code-review` | GitHub PR을 다단계 에이전트로 리뷰하고, 검증된 이슈만 해당 코드 라인에 **인라인 코멘트 + 코드 제안(suggestion)** 으로 게시. 게시 전 승인, 신뢰도 80점 필터. |
 | `skillframe:code-review-context` | diff를 기준으로 리뷰 범위를 정하고, 필요할 때 codegraph로 변경 영향의 caller/callee와 관련 테스트를 추적. |
 | `skillframe:humanize-korean` | AI가 쓴 한글 텍스트의 AI 티를 탐지·분류해 내용은 그대로 두고 문체만 자연스럽게 윤문. fast/strict 모드. |
+
+## 명령
+
+| 명령 | 하는 일 |
+| --- | --- |
+| `/commit` | 작업 내용을 공통 작업단위별로 묶어 여러 Git 커밋으로 생성. |
+| `/commit-push-pr` | 브랜치 생성(필요한 경우), 커밋, push, Draft PR 생성. 기존 PR 승인 게이트 준수. |
+| `/clean_gone` | remote에서 삭제된 `[gone]` 브랜치와 연결된 worktree를 확인하고 안전하게 정리. |
 
 `create-pull-request`와 `code-review`는 코멘트/PR 문장 윤문에 같은 플러그인의
 `humanize-korean`을 사용할 수 있고, `code-review`는 리뷰 범위 분석에
@@ -25,6 +33,10 @@
 /plugin marketplace add tophun/skillframe
 /plugin install skillframe@skillframe
 ```
+
+Codex에서 같은 명령을 슬래시 명령으로 사용하려면 레포 루트의
+`prompts/*.md`를 `~/.codex/prompts/`에 복사합니다. 자세한 설치 방법은
+루트 `README.md`의 `Codex custom commands`를 참고하세요.
 
 ## 사용
 
