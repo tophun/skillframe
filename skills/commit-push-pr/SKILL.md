@@ -27,6 +27,12 @@ Turn the current related changes into grouped commits on one pushed branch and o
 ### 3. Prepare commits by work unit
 
 - Group the changes by common unit of work and choose one concise, repository-consistent commit message per group.
+- Before creating a new commit, compare each work unit with recent commits on the current branch.
+  - If it completes or directly follows the same feature, bug fix, refactor, test, or documentation change, prefer merging it into that commit.
+  - For `HEAD`, use `git commit --amend` after showing the final message.
+  - For an older unpushed local commit, use `git commit --fixup=<sha>` followed by `git rebase -i --autosquash <sha>^` after showing the target SHA, reason, and rewritten commit list for approval.
+  - If the purpose differs, keep a separate commit.
+  - Never rewrite a pushed/shared commit by default; create a follow-up commit unless the user explicitly requests history rewriting.
 - Stage explicit paths for one work unit at a time and inspect each staged diff.
 - Run focused checks relevant to the changed files.
 - Create one commit per coherent work unit, in dependency order when needed.
@@ -53,7 +59,8 @@ Proceed only after approval. Use Draft by default unless the user explicitly req
 
 ## Guardrails
 
-- Never force-push, amend, rebase, merge, close, or delete branches in this skill.
+- Never force-push or rewrite pushed/shared history. Amend or rebase only for an explicitly approved matching unpushed local commit.
+- Do not merge, close, or delete branches in this skill.
 - Never include changes that were not approved or that are unrelated to the request.
 - Do not claim tests passed unless they were actually run.
 - If `gh` is unavailable or unauthenticated, stop before committing or pushing and report the required setup.
