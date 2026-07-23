@@ -1,0 +1,4 @@
+interface:
+  display_name: "Clean Gone Branches"
+  short_description: "Remove stale branches and worktrees"
+  default_prompt: "Use $clean-gone to inspect and safely remove local branches marked gone."
