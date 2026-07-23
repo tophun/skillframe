@@ -1,37 +1,38 @@
 ---
 name: code-review
-description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "리뷰해줘", "PR 리뷰", "review this PR", "$code-review", "/code-review"를 요청할 때 사용한다. 코드 변경을 검토해 GitHub에 리뷰를 남기려는 상황. 커밋 작성·PR 생성·머지·라벨/리뷰어 변경에는 사용하지 않는다(그건 skillframe-create-pull-request 담당).
+description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "리뷰해줘", "PR 리뷰", "review this PR", "$code-review", "/code-review"를 요청할 때 사용한다. 코드 변경을 검토해 GitHub에 리뷰를 남기려는 상황. 커밋 작성·PR 생성·머지·라벨/리뷰어 변경에는 사용하지 않는다(PR 생성/본문 수정은 create-pull-request 담당).
 ---
 
 # Skillframe: Code Review
 
 GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해당 코드 라인에 인라인 코멘트 + 코드 제안(suggestion)** 으로 남기는 개인 코드리뷰 워크플로우. 코멘트 문장은 게시 전 `humanize-korean` 스킬로 다듬어 동료가 바로 이해하게 만든다.
 
-## 핵심 원칙 (이 4가지가 이 스킬의 존재 이유)
+## 핵심 원칙 (이 5가지가 이 스킬의 존재 이유)
 
-1. **인라인으로 남긴다.** 최상단 일반 코멘트(`gh pr comment`)가 아니라, 문제가 있는 정확한 코드 라인에 인라인 리뷰 코멘트(`gh api .../pulls/{n}/reviews`)로 남긴다.
-2. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 리뷰어가 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
-3. **문장을 윤문한다.** 게시 전 `humanize-korean`(fast 모드)으로 코멘트 문장을 다듬는다. 백틱 안 코드 식별자는 절대 수정 금지.
-4. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 사용자에게 먼저 확인받는다.
+1. **인라인으로만 남긴다.** 최상단 일반 코멘트나 리뷰 요약(`gh pr comment`, review-level `body`)은 남기지 않고, 문제가 있는 정확한 코드 라인에 인라인 리뷰 코멘트(`gh api .../pulls/{n}/reviews`)만 남긴다.
+2. **구조를 파악한다.** `code-review-context` 스킬로 diff를 먼저 읽고, 변경 영향도가 넓을 때만 codegraph의 caller/callee와 관련 테스트까지 확장한다.
+3. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 리뷰어가 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
+4. **문장을 윤문한다.** 게시 전 `humanize-korean`(fast 모드)으로 코멘트 문장을 다듬는다. 백틱 안 코드 식별자는 절대 수정 금지.
+5. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 먼저 확인받는다.
 
 ## 언제 쓰나 / 안 쓰나
 
 - **쓴다:** PR 링크/번호 + "코드리뷰/리뷰해줘/review this PR", `/code-review`, `$code-review`
-- **안 쓴다:** 커밋 작성(→ 플러그인 commit 스킬), PR 생성/본문 수정(→ `skillframe-create-pull-request`), 머지·라벨·리뷰어 변경
+- **안 쓴다:** 커밋 작성, PR 생성/본문 수정(→ `create-pull-request`), 머지·라벨·리뷰어 변경
 
 ## 워크플로우
 
 리뷰 분석 파이프라인은 플러그인 `code-review:code-review`와 동일한 다단계 구조를 쓰되, **게시 단계를 인라인+제안+윤문으로 대체**한다.
 
-1. **적격성 확인 (Haiku)** — PR이 (a) closed/merged, (b) draft, (c) 자동/사소, (d) 이미 "### Code review" 코멘트 존재 중 하나면 중단.
-   `gh pr view {n} --repo {owner/repo} --json state,isDraft,mergedAt,closed`, `--comments`
-2. **컨텍스트 수집 (병렬 Haiku)** — 관련 CLAUDE.md 경로 목록 + PR 요약(`gh pr diff {n}`).
+1. **적격성 확인 (Haiku)** — PR이 (a) closed/merged, (b) draft, (c) 자동/사소, (d) 동일 head 커밋에 이미 해당 리뷰어의 인라인 코멘트가 존재 중 하나면 중단.
+   `gh pr view {n} --repo {owner/repo} --json state,isDraft,mergedAt,closed,headRefOid`, `gh api repos/{owner/repo}/pulls/{n}/comments --paginate`
+2. **컨텍스트 수집 (병렬 Haiku)** — 관련 CLAUDE.md 경로 목록 + PR 요약(`gh pr diff {n}`). 이 단계에서 `$code-review-context`를 적용한다. diff를 기준으로 리뷰 깊이를 정하고, 저장소가 크거나 변경이 모듈 경계를 넘거나 공용·고위험 경로를 건드린 경우에만 codegraph를 조건부로 `init`/`index`하고 영향 심볼의 caller/callee·구현체·테스트를 제한적으로 조회한다. codegraph가 없거나 stale하면 수동 탐색으로 계속하고 confidence를 기록한다.
 3. **병렬 리뷰 (5개 Sonnet)** — ① CLAUDE.md 준수(없으면 생략) ② 변경 라인만 얕은 버그 스캔 ③ git blame/history 회귀 ④ 이전 PR 코멘트 재적용 ⑤ 코드 주석/불변식 위반.
 4. **신뢰도 스코어링 (이슈별 Haiku)** — 각 이슈를 0-100으로 채점(루브릭·false positive 목록은 `references/scoring-rubric.md`). **80점 미만 제외.** 남는 게 없으면 중단.
 5. **적격성 재확인 (Haiku)** — 게시 직전 1단계 조건을 다시 확인.
 6. **사용자 승인** — 살아남은 이슈 목록을 보여주고 게시 범위를 확인받는다. 임계값(80)에 아깝게 못 미친 실질 이슈가 있으면 함께 공유해 판단을 맡긴다.
 7. **코멘트 윤문** — `humanize-korean` fast 모드로 각 코멘트 문장을 다듬는다. 이 스킬(`skillframe:humanize-korean`)과 실행 에이전트는 **같은 `skillframe` 플러그인에 함께 들어 있어** 별도 설치가 필요 없다.
-8. **인라인 리뷰 게시** — `gh api .../pulls/{n}/reviews`에 인라인 코멘트 + suggestion 페이로드로 게시. 상세 recipe는 `references/inline-review-recipe.md`.
+8. **인라인 리뷰 게시** — `gh api .../pulls/{n}/reviews`에 인라인 코멘트 + suggestion만 포함한 페이로드로 게시한다. 최상위 `body`, `### Code review`, 리뷰 요약, `Generated with Claude Code` 문구는 넣지 않는다. 상세 recipe는 `references/inline-review-recipe.md`.
 
 ## 쉽게 쓰는 코멘트 3단 구조
 

@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "skillframe",
   "version": "1.0.0",
-  "description": "Personal Claude Code plugins for Korean git and code-review workflows.",
+  "description": "Personal Claude Code plugin for Korean PR creation, code-review, and writing workflows.",
   "owner": {
     "name": "tophun",
     "url": "https://github.com/tophun/skillframe"
@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "skillframe",
-      "description": "개인용 코드리뷰 + 한국어 윤문 플러그인. skillframe:code-review(PR 다단계 리뷰 → 인라인 코멘트 + 코드 제안 게시) + skillframe:humanize-korean(AI 티 윤문). 코드리뷰가 윤문에 humanize-korean을 사용.",
+      "description": "개인용 Git 커밋/PR 흐름 + 코드리뷰 컨텍스트 분석 + 한국어 윤문 플러그인. /commit, /commit-push-pr, /clean_gone 명령과 skillframe:create-pull-request(PR 생성/본문 보정), skillframe:code-review-context(diff/codegraph 영향 범위), skillframe:code-review(PR 다단계 리뷰), skillframe:humanize-korean(AI 티 윤문)을 제공합니다.",
       "source": "./plugins/skillframe",
       "category": "code-review"
     }
