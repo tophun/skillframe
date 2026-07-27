@@ -5,57 +5,78 @@ description: 사용자가 GitHub PR(링크·번호)에 대해 "코드리뷰", "�
 
 # Skillframe: Code Review
 
-GitHub PR을 다단계 에이전트로 분석하고, 검증된 이슈만 **해당 코드 라인에 인라인 코멘트 + 코드 제안(suggestion)** 으로 남기는 개인 코드리뷰 워크플로우. 코멘트 문장은 게시 전 `humanize-korean` 스킬로 다듬어 동료가 바로 이해하게 만든다.
+GitHub PR을 **탐색·추론·평가·작성 서브에이전트**로 나눠 분석하고, 검증된 이슈만 **해당 코드 라인에 인라인 코멘트 + 코드 제안(suggestion)** 으로 남긴다.
 
-## 핵심 원칙 (이 5가지가 이 스킬의 존재 이유)
+## 핵심 원칙
 
-1. **인라인으로만 남긴다.** 최상단 일반 코멘트나 리뷰 요약(`gh pr comment`, review-level `body`)은 남기지 않고, 문제가 있는 정확한 코드 라인에 인라인 리뷰 코멘트(`gh api .../pulls/{n}/reviews`)만 남긴다.
-2. **구조를 파악한다.** `code-review-context` 스킬로 diff를 먼저 읽고, 변경 영향도가 넓을 때만 codegraph의 caller/callee와 관련 테스트까지 확장한다.
-3. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 리뷰어가 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
-4. **문장을 윤문한다.** 게시 전 `humanize-korean`(fast 모드)으로 코멘트 문장을 다듬는다. 백틱 안 코드 식별자는 절대 수정 금지.
-5. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 먼저 확인받는다.
+1. **인라인으로만 남긴다.** 최상단 일반 코멘트나 리뷰 요약(`gh pr comment`, review-level `body`)은 남기지 않는다. 문제가 있는 정확한 코드 라인에만 붙인다.
+2. **코드 제안을 붙인다.** 고칠 수 있는 이슈에는 ` ```suggestion ` 블록을 붙여 GitHub UI에서 `Commit suggestion` 한 번으로 반영하게 한다.
+3. **게시 전 승인받는다.** GitHub에 남는 작업이므로 살아남은 이슈와 게시 범위를 먼저 확인받는다. 승인된 집합이 이후 단계의 유일한 범위다.
+4. **역할별로 위임한다.** 오케스트레이터는 diff를 통독하지 않는다. 서브에이전트에 맡기고 구조화된 결과만 받아 조립한다.
+5. **N회 도는 단계에서 아끼고, 1회짜리 게이트에서는 정확도를 산다.**
 
 ## 언제 쓰나 / 안 쓰나
 
 - **쓴다:** PR 링크/번호 + "코드리뷰/리뷰해줘/review this PR", `/code-review`, `$code-review`
 - **안 쓴다:** 커밋 작성, PR 생성/본문 수정(→ `create-pull-request`), 머지·라벨·리뷰어 변경
 
+## 서브에이전트
+
+| 단계 | 에이전트 | 모델 (기본 → 승급) |
+| --- | --- | --- |
+| 탐색 | `skillframe:code-review-explorer` | Haiku |
+| 추론 (레인당 1개, 병렬) | `skillframe:code-review-analyst` | Sonnet → Opus |
+| 평가 | `skillframe:code-review-judge` | Sonnet → Opus |
+| 코멘트 작성 | `skillframe:code-review-writer` | Haiku → Sonnet |
+
+승급은 별도 정의 없이 같은 에이전트를 `model` 오버라이드로 부른다. **승급 조건과 각 에이전트의 작업 규칙은 에이전트 정의(`plugins/skillframe/agents/`)에 있다. 여기서 반복하지 않는다** — 한쪽만 고쳐지면 갈라진다.
+
+오케스트레이터가 지킬 것은 이 셋뿐이다.
+
+- 각 레인에는 담당 파일의 hunk만 넘긴다. 전체 diff나 파일 전문을 통째로 넘기지 않는다.
+- analyst 레인은 한 메시지에서 동시에 띄운다.
+- 서브에이전트에 GitHub 쓰기를 맡기지 않는다.
+
 ## 워크플로우
 
-리뷰 분석 파이프라인은 플러그인 `code-review:code-review`와 동일한 다단계 구조를 쓰되, **게시 단계를 인라인+제안+윤문으로 대체**한다.
-
-1. **적격성 확인 (Haiku)** — PR이 (a) closed/merged, (b) draft, (c) 자동/사소, (d) 동일 head 커밋에 이미 해당 리뷰어의 인라인 코멘트가 존재 중 하나면 중단.
+1. **적격성 확인** — `gh` 직접 호출. PR이 (a) closed/merged, (b) draft, (c) 자동·사소, (d) 동일 head 커밋에 이미 해당 리뷰어의 인라인 코멘트가 존재 중 하나면 중단.
    `gh pr view {n} --repo {owner/repo} --json state,isDraft,mergedAt,closed,headRefOid`, `gh api repos/{owner/repo}/pulls/{n}/comments --paginate`
-2. **컨텍스트 수집 (병렬 Haiku)** — 관련 CLAUDE.md 경로 목록 + PR 요약(`gh pr diff {n}`). 이 단계에서 `$code-review-context`를 적용한다. diff를 기준으로 리뷰 깊이를 정하고, 저장소가 크거나 변경이 모듈 경계를 넘거나 공용·고위험 경로를 건드린 경우에만 codegraph를 조건부로 `init`/`index`하고 영향 심볼의 caller/callee·구현체·테스트를 제한적으로 조회한다. codegraph가 없거나 stale하면 수동 탐색으로 계속하고 confidence를 기록한다.
-3. **병렬 리뷰 (5개 Sonnet)** — ① CLAUDE.md 준수(없으면 생략) ② 변경 라인만 얕은 버그 스캔 ③ git blame/history 회귀 ④ 이전 PR 코멘트 재적용 ⑤ 코드 주석/불변식 위반.
-4. **신뢰도 스코어링 (이슈별 Haiku)** — 각 이슈를 0-100으로 채점(루브릭·false positive 목록은 `references/scoring-rubric.md`). **80점 미만 제외.** 남는 게 없으면 중단.
-5. **적격성 재확인 (Haiku)** — 게시 직전 1단계 조건을 다시 확인.
-6. **사용자 승인** — 살아남은 이슈 목록을 보여주고 게시 범위를 확인받는다. 임계값(80)에 아깝게 못 미친 실질 이슈가 있으면 함께 공유해 판단을 맡긴다.
-7. **코멘트 윤문** — `humanize-korean` fast 모드로 각 코멘트 문장을 다듬는다. 이 스킬(`skillframe:humanize-korean`)과 실행 에이전트는 **같은 `skillframe` 플러그인에 함께 들어 있어** 별도 설치가 필요 없다.
-8. **인라인 리뷰 게시** — `gh api .../pulls/{n}/reviews`에 인라인 코멘트 + suggestion만 포함한 페이로드로 게시한다. 최상위 `body`, `### Code review`, 리뷰 요약, `Generated with Claude Code` 문구는 넣지 않는다. 상세 recipe는 `references/inline-review-recipe.md`.
+2. **탐색** — `code-review-explorer` 1개. PR 번호와 저장소를 넘기면 diff·hunk·CLAUDE.md 경로·관련 테스트·레인 배분안·`deep_lane_files`를 JSON으로 돌려준다. 리뷰 범위 판단은 `$code-review-context`를 따른다. codegraph는 그 스킬의 조건을 만족할 때만 explorer에 지시한다.
+3. **추론** — `code-review-analyst`를 explorer가 제안한 레인 수만큼 **동시에** 띄운다. `deep_lane_files`가 승급 조건에 걸리면 `model: opus`, `lane: deep`으로 1개 추가한다.
+4. **평가** — `code-review-judge` 1개에 **모든 레인의 이슈를 한 번에** 넘긴다. 3단계에서 Opus 레인이 돌았으면 judge도 Opus로 올린다. 80점 미만 제외, 남는 게 없으면 중단. `needs_deep_review`가 나오면 그 이슈만 3단계 Opus 레인으로 한 번 되돌린다.
+5. **적격성 재확인** — 게시 직전 1단계 조건을 다시 확인.
+6. **사용자 승인** — 살아남은 이슈와 `near_miss`를 함께 보여주고 게시 범위를 확인받는다.
+7. **코멘트 작성** — `code-review-writer` 1개에 승인된 이슈와 `references/comment-style.md`의 **절대 경로**를 넘긴다. 별도 윤문 패스를 돌리지 않는다.
+8. **게시** — writer가 돌려준 `comments`를 `gh api .../pulls/{n}/reviews` 페이로드에 담는다. 최상위 `body`는 비운다. 상세는 `references/inline-review-recipe.md`.
 
-## 쉽게 쓰는 코멘트 3단 구조
+### 오케스트레이터가 직접 하는 일
 
-각 코멘트는 **① 무엇이 문제인지 → ② 왜 문제인지 → ③ 어떻게 고치는지(suggestion)** 순으로 쓴다. 전문 용어보다 동료가 바로 이해할 표현을 쓴다.
-
-> 예) "이 `useEffect`는 `console.log`만 실행하는 디버그용 코드입니다(①). 실제 기능엔 영향이 없으니 병합 전에 지우면 좋겠습니다(②). 아래 suggestion으로 블록을 통째로 지울 수 있습니다(③)."
+탐색·추론·평가·작성은 전부 위임한다. 남는 건 넷뿐이다 — `gh` 적격성 확인(1·5), 서브에이전트 배분과 결과 조립, 사용자 승인(6), 게시와 게시 후 검증(8).
 
 ## 게시 후 검증 (필수)
-
-인라인 코멘트가 의도한 라인·suggestion으로 붙었는지 확인한다.
 
 ```bash
 gh api repos/{owner}/{repo}/pulls/{n}/comments \
   --jq '.[] | select(.pull_request_review_id=={reviewId}) | {path, line, start_line, has_suggestion: (.body|contains("```suggestion"))}'
 ```
 
-## 흔한 실수
+## 참고 자료 (필요한 단계에서만 로드)
 
-| 실수 | 바로잡기 |
+| 파일 | 언제 | 누가 |
+| --- | --- | --- |
+| [`references/comment-style.md`](references/comment-style.md) | 7단계 | writer — 코멘트 문장 루브릭 |
+| [`references/scoring-rubric.md`](references/scoring-rubric.md) | 4단계 | judge — 신뢰도 채점 루브릭 |
+| [`references/inline-review-recipe.md`](references/inline-review-recipe.md) | 8단계 | 오케스트레이터 — 페이로드·앵커·suggestion 문법 |
+
+## 이 저장소 특유의 함정
+
+일반적인 리뷰 상식은 적지 않는다. 실제로 여기서 반복해 틀린 것만 남긴다.
+
+| 함정 | 바로잡기 |
 | --- | --- |
-| 최상단 일반 코멘트로 남김 | 문제 라인에 인라인으로 남긴다 (`pulls/{n}/reviews`) |
-| 설명만 하고 고치는 법 없음 | 고칠 수 있으면 ` ```suggestion ` 블록을 붙인다 |
-| suggestion 들여쓰기 불일치 | 원본 파일과 **정확히 같은 들여쓰기**로 작성(`git show origin/{branch}:{path}`로 확인) |
-| 승인 없이 바로 게시 | 게시 전 이슈·범위를 사용자에게 확인받는다 |
-| AI 티 나는 딱딱한 문장 | `humanize-korean`으로 윤문 후 게시 |
-| 사용자가 수정하지 않은 라인 지적 | 변경된 라인의 이슈만 남긴다 |
+| 여러 줄이라 suggestion을 포기 | `start_line`~`line` 범위 앵커면 여러 줄도 붙는다. 줄 수는 포기 사유가 아니다 |
+| suggestion 들여쓰기 불일치 | `git show origin/{branch}:{path}`로 원본을 확인하고 100% 맞춘다 |
+| 코멘트에 리뷰 도구 사정을 씀 | "suggestion 대신 예시로", "판단이 필요해 넣지 않았습니다" 전부 사족이다. 지운다 |
+| "발화" 같은 어색한 한자어 | "실행된다 / 동작한다 / 트리거된다"로 쓴다 |
+| Opus 심층 레인을 돌리고 judge는 Sonnet 유지 | 심판이 발견자보다 약하면 안 된다 |
+| 1회짜리 게이트를 아끼려고 모델을 낮춤 | judge는 배치 1회라 절감 효과가 없다 |

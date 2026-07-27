@@ -7,7 +7,7 @@
 | 노출 이름 | 하는 일 |
 | --- | --- |
 | `skillframe:create-pull-request` | GitHub PR 생성과 기존 PR 본문/draft 보정을 처리. repository template과 말투 규칙을 읽고, `gh pr create/edit/ready` 실행 전 승인 게이트를 연다. |
-| `skillframe:code-review` | GitHub PR을 다단계 에이전트로 리뷰하고, 검증된 이슈만 해당 코드 라인에 **인라인 코멘트 + 코드 제안(suggestion)** 으로 게시. 게시 전 승인, 신뢰도 80점 필터. |
+| `skillframe:code-review` | GitHub PR을 탐색·추론·평가·작성 서브에이전트로 나눠 리뷰하고, 검증된 이슈만 해당 코드 라인에 **인라인 코멘트 + 코드 제안(suggestion)** 으로 게시. 게시 전 승인, 신뢰도 80점 필터. |
 | `skillframe:code-review-context` | diff를 기준으로 리뷰 범위를 정하고, 필요할 때 codegraph로 변경 영향의 caller/callee와 관련 테스트를 추적. |
 | `skillframe:humanize-korean` | AI가 쓴 한글 텍스트의 AI 티를 탐지·분류해 내용은 그대로 두고 문체만 자연스럽게 윤문. fast/strict 모드. |
 
@@ -32,7 +32,18 @@
 
 ## 에이전트
 
-`ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer`(strict) · `korean-ai-tell-taxonomist`(분류 체계 유지보수).
+**코드리뷰** — 역할별로 나눠 모델을 고정합니다. 오케스트레이터는 diff를 통독하지 않습니다.
+
+| 에이전트 | 모델 (기본 → 승급) | 역할 |
+| --- | --- | --- |
+| `code-review-explorer` | Haiku | diff·hunk·CLAUDE.md 경로·테스트 수집, 리뷰 레인 배분안 |
+| `code-review-analyst` | Sonnet → **Opus** | 레인 하나를 맡아 이슈 발견 + 근거. 동시성·트랜잭션·인증·상태 머신이면 `lane: deep`을 `model: opus`로 최대 1개 |
+| `code-review-judge` | Sonnet → **Opus** | 전체 이슈 배치 1회 스코어링·중복 병합·false positive 제거. **Opus 심층 레인이 돌았으면 judge도 Opus** — 심판이 발견자보다 약하면 안 된다 |
+| `code-review-writer` | Haiku → Sonnet | 3단 구조 코멘트 + suggestion + 앵커 작성 |
+
+승급은 별도 에이전트 정의 없이 같은 에이전트를 `model` 오버라이드로 호출합니다. N회 도는 단계(analyst 레인)에서 아끼고, 1회짜리 게이트(judge)에서는 정확도를 삽니다.
+
+**윤문** — `ai-tell-detector` · `korean-style-rewriter` · `content-fidelity-auditor` · `naturalness-reviewer`(strict) · `korean-ai-tell-taxonomist`(분류 체계 유지보수).
 
 기본 fast 경로는 `humanize-korean` 스킬이 에이전트 없이 직접 처리합니다. 기존 `humanize-monolith`는 호환용으로만 보존되어 새 실행 경로에서는 사용하지 않습니다.
 

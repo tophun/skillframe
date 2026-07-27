@@ -23,7 +23,7 @@ The `skillframe` plugin exposes four skills and three commands:
 | Skill | Use when |
 | --- | --- |
 | `skillframe:create-pull-request` | Create a new GitHub PR or repair an existing PR body/draft state with Korean title/body rules and an approval gate before `gh pr create/edit/ready`. Say "PR 만들어줘", `/pr`, or "PR 본문 고쳐줘". |
-| `skillframe:code-review` | Review a GitHub PR with multi-agent analysis and post **inline comments with code suggestions**; comment text is polished via `humanize-korean`. Say "코드리뷰", `/code-review` with a PR link. |
+| `skillframe:code-review` | Review a GitHub PR through dedicated explore / reason / evaluate / write subagents (Haiku for search, Sonnet for review lanes and scoring, escalating either to Opus for concurrency / transaction / auth / lifecycle changes) and post **inline comments with code suggestions**; comment wording follows `humanize-korean` rules. Say "코드리뷰", `/code-review` with a PR link. |
 | `skillframe:code-review-context` | Map the review perimeter from the diff and use codegraph selectively to trace affected callers, callees, and tests. |
 | `skillframe:humanize-korean` | Rewrite AI-written Korean text to read naturally — detect and fix translationese / AI tells while preserving meaning. Say "AI 티 없애줘", "사람이 쓴 것처럼 윤문". |
 
@@ -139,7 +139,8 @@ plugins/
       code-review/                 # -> skillframe:code-review
       code-review-context/         # -> skillframe:code-review-context
       humanize-korean/             # -> skillframe:humanize-korean
-    agents/                        # humanize-monolith + 5 agents
+    agents/                        # 5 humanize agents + 4 code-review agents
+                                   #   (explorer/analyst/judge/writer)
   skillframe-codex/                # Codex plugin package
     .codex-plugin/plugin.json
     README.md
