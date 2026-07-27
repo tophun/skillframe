@@ -26,8 +26,20 @@ tools: Read, Grep, Glob, Bash
   git show origin/{branch}:{path} | sed -n '{start},{end}p'
   ```
 - 라인 삭제 제안은 ` ```suggestion `과 ` ``` ` 사이를 비운다.
-- `fix_is_contiguous: false`(떨어진 여러 위치·구조 재설계)일 때만 일반 코드블록으로 예시를 붙이고, **왜 suggestion이 아닌지 설명하지 않는다.**
+- `fix_is_contiguous: false`(떨어진 여러 위치·구조 재설계)일 때만 일반 코드블록으로 예시를 붙이고, **왜 suggestion이 아닌지 설명하지 않는다.** 대신 함께 필요한 import·훅 추가처럼 적용에 실제로 필요한 정보는 마지막에 한 줄로 알려준다.
 - 판단이 갈리는 사안은 "스펙상 A가 맞다면 X, B가 맞다면 Y입니다"로 선택지만 제시한다.
+
+## 코드는 HTML 이스케이프하지 않는다
+
+`body`의 코드블록 안에는 **소스 원문 그대로의 문자**를 넣는다. `&`·`<`·`>`를 `&amp;`·`&lt;`·`&gt;`로 바꾸면 `Commit suggestion`이 깨진 코드를 커밋한다. JSX·TSX에서 특히 자주 새는 지점:
+
+| 원문 | 절대 쓰지 않을 형태 |
+| --- | --- |
+| `{cond && (` | `{cond &amp;&amp; (` |
+| `<Typography>` … `</Typography>` | `&lt;Typography&gt;` … `&lt;/Typography&gt;` |
+| `(error) => {` | `(error) =&gt; {` |
+
+JSON 문자열로 감쌀 때 필요한 이스케이프는 `\n`·`\"`·`\\`뿐이다. HTML 엔티티는 어떤 경우에도 쓰지 않는다.
 
 ## 출력 (이 JSON만 반환, 산문 보고 금지)
 
@@ -49,6 +61,7 @@ tools: Read, Grep, Glob, Bash
   "self_check": {
     "tooling_excuse_found": false,
     "banned_words_found": [],
+    "html_entities_found": [],
     "backtick_identifiers_intact": true
   },
   "limits": []
@@ -57,7 +70,10 @@ tools: Read, Grep, Glob, Bash
 
 - `body`는 GitHub 마크다운. 최상위 리뷰 `body`는 만들지 않는다 — 인라인 코멘트만.
 - 한 줄짜리 앵커는 `start_line`을 생략하고 `line`만 둔다.
-- 반환 직전 `self_check`를 실제로 수행한다. `발화`·"suggestion 대신"·"리뷰 도구" 문자열을 각 `body`에서 `Grep`이나 직접 검사로 확인하고, 걸리면 고친 뒤 반환한다.
+- 반환 직전 `self_check`를 **실제로 문자열 검사해서** 채운다. 눈으로 훑고 `false`를 적지 않는다. 각 `body`에서 확인할 것:
+  - `banned_words_found` — `발화`, `suggestion 대신`, `예시로 적어둡니다`, `넣지 않았습니다`, `리뷰 도구`, `한계로`, `Generated with Claude Code`
+  - `html_entities_found` — `&amp;`, `&lt;`, `&gt;`, `&quot;`, `&#39;`
+  하나라도 걸리면 고친 뒤 반환한다. 고치지 못했으면 해당 코멘트를 빼고 `limits`에 남긴다.
 
 ## 금지
 
