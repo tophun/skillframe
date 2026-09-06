@@ -8,6 +8,10 @@ description: 사용자가 새 GitHub PR, pull request, 풀리퀘 생성을 요�
 GitHub PR을 생성하거나, 이미 만들어진 PR의 설명과 상태를 리뷰어가 이해하기 쉬운
 형태로 보정한다.
 
+본문은 무엇을 왜 바꿨는지 먼저 밝히고, 핵심 구현 방식과 적용 범위를 설명한다.
+커밋이나 조사 이력을 나열하지 않는다. `references/pr-body.md`의 작성 후 점검으로
+불필요한 세부 사항을 덜어내고, 리뷰에 필요한 제약과 검증 한계는 남긴다.
+
 **핵심 원칙:** `gh pr create`, `gh pr edit`, `gh pr ready`는 template/reference,
 diff, 기존 PR 상태를 확인하고 사용자 승인을 받은 뒤에만 실행한다.
 
